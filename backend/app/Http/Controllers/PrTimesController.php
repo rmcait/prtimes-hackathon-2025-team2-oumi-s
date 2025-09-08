@@ -6,6 +6,9 @@ use App\Services\PrTimesApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * @tags PRTIMES API
+ */
 class PrTimesController extends Controller
 {
     protected PrTimesApiService $prTimesApiService;
@@ -15,6 +18,14 @@ class PrTimesController extends Controller
         $this->prTimesApiService = $prTimesApiService;
     }
 
+    /**
+     * 企業一覧取得
+     *
+     * PRTIMES APIから企業一覧をページング付きで取得します。
+     *
+     * @operationId getCompanies
+     * @response array
+     */
     public function getCompanies(Request $request): JsonResponse
     {
         try {
@@ -29,6 +40,14 @@ class PrTimesController extends Controller
         }
     }
 
+    /**
+     * 企業詳細取得
+     *
+     * 特定の企業の詳細情報を取得します。
+     *
+     * @operationId getCompany
+     * @response object
+     */
     public function getCompany(int $companyId): JsonResponse
     {
         try {
@@ -40,6 +59,14 @@ class PrTimesController extends Controller
         }
     }
 
+    /**
+     * プレスリリース一覧取得
+     *
+     * プレスリリース一覧をページング付きで取得します。日付範囲でのフィルタリングも可能です。
+     *
+     * @operationId getReleases
+     * @response array
+     */
     public function getReleases(Request $request): JsonResponse
     {
         try {
@@ -56,6 +83,14 @@ class PrTimesController extends Controller
         }
     }
 
+    /**
+     * 企業別プレスリリース一覧取得
+     *
+     * 特定の企業のプレスリリース一覧を取得します。
+     *
+     * @operationId prTimes.getCompanyReleases
+     * @response array
+     */
     public function getCompanyReleases(Request $request, int $companyId): JsonResponse
     {
         try {
@@ -72,6 +107,14 @@ class PrTimesController extends Controller
         }
     }
 
+    /**
+     * プレスリリース詳細取得
+     *
+     * 特定のプレスリリースの詳細情報を取得します。
+     *
+     * @operationId prTimes.getRelease
+     * @response array
+     */
     public function getRelease(int $companyId, int $releaseId): JsonResponse
     {
         try {
@@ -83,6 +126,14 @@ class PrTimesController extends Controller
         }
     }
 
+    /**
+     * プレスリリース統計取得
+     *
+     * 特定のプレスリリースの閲覧統計などの情報を取得します。
+     *
+     * @operationId prTimes.getReleaseStatistics
+     * @response array
+     */
     public function getReleaseStatistics(int $companyId, int $releaseId): JsonResponse
     {
         try {
@@ -94,6 +145,14 @@ class PrTimesController extends Controller
         }
     }
 
+    /**
+     * カテゴリ一覧取得
+     *
+     * プレスリリースカテゴリ一覧をページング付きで取得します。
+     *
+     * @operationId getCategories
+     * @response array
+     */
     public function getCategories(Request $request): JsonResponse
     {
         try {
@@ -108,6 +167,14 @@ class PrTimesController extends Controller
         }
     }
 
+    /**
+     * カテゴリ詳細取得
+     *
+     * 特定のカテゴリの詳細情報を取得します。
+     *
+     * @operationId prTimes.getCategory
+     * @response array
+     */
     public function getCategory(int $categoryId): JsonResponse
     {
         try {
@@ -119,6 +186,14 @@ class PrTimesController extends Controller
         }
     }
 
+    /**
+     * カテゴリ別プレスリリース一覧取得
+     *
+     * 特定のカテゴリのプレスリリース一覧を取得します。
+     *
+     * @operationId prTimes.getCategoryReleases
+     * @response array
+     */
     public function getCategoryReleases(Request $request, int $categoryId): JsonResponse
     {
         try {
@@ -135,6 +210,14 @@ class PrTimesController extends Controller
         }
     }
 
+    /**
+     * 動画付きプレスリリース一覧取得
+     *
+     * 動画が付いているプレスリリース一覧を取得します。
+     *
+     * @operationId prTimes.getMovieReleases
+     * @response array
+     */
     public function getMovieReleases(Request $request): JsonResponse
     {
         try {
@@ -151,6 +234,14 @@ class PrTimesController extends Controller
         }
     }
 
+    /**
+     * 都道府県一覧取得
+     *
+     * 都道府県一覧を取得します。
+     *
+     * @operationId prTimes.getPrefectures
+     * @response array
+     */
     public function getPrefectures(): JsonResponse
     {
         try {
@@ -162,6 +253,14 @@ class PrTimesController extends Controller
         }
     }
 
+    /**
+     * リリースタイプ一覧取得
+     *
+     * プレスリリースタイプ一覧を取得します。
+     *
+     * @operationId prTimes.getReleaseTypes
+     * @response array
+     */
     public function getReleaseTypes(): JsonResponse
     {
         try {
