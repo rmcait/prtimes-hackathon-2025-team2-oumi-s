@@ -1,1 +1,0 @@
-# prtimes-hackathon-2025-team2-oumi-s
