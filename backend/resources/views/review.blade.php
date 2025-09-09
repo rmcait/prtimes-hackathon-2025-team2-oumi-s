@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>レビュー機能</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         * {
             margin: 0;
@@ -296,6 +297,17 @@
             transform: translateY(-1px);
         }
 
+        /* Diff styles (minimal) */
+        .Diff {
+            font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .Diff .changeTypeInserted { background: #e6ffed; }
+        .Diff .changeTypeDeleted { background: #ffeef0; }
+        .Diff del { background: #ffeef0; text-decoration: none; }
+        .Diff ins { background: #e6ffed; text-decoration: none; }
+
         @media (max-width: 768px) {
             .content {
                 padding: 20px;
@@ -392,6 +404,25 @@ console.log('Hello World');
                 </div>
             </div>
 
+            <div class="section" id="diffSection" style="display:none;">
+                <h2 class="section-title">校正結果（差分）</h2>
+                <div style="margin-bottom:12px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-secondary" id="showAllBtn">全体</button>
+                        <button class="btn btn-primary" id="showChangesOnlyBtn">変更のみ</button>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-left:auto;">
+                        <label style="display:flex; align-items:center; gap:6px;">
+                            <input type="radio" name="renderer" value="Inline"> インライン
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px;">
+                            <input type="radio" name="renderer" value="SideBySide" checked> 左右並び
+                        </label>
+                    </div>
+                </div>
+                <div id="diffContainer" class="Diff"></div>
+            </div>
+
             <div class="action-buttons display-flex">
                 <button class="btn btn-secondary" id="reviewBtn">
                     レビュー
@@ -457,7 +488,7 @@ console.log('Hello World');
         });
 
         // ボタンクリックイベント
-        document.getElementById('reviewBtn').addEventListener('click', function() {
+        document.getElementById('reviewBtn').addEventListener('click', async function() {
             const selectedMedia = document.querySelectorAll('.media-item.selected');
             const content = document.querySelector('.markdown-textarea').value;
             
@@ -472,7 +503,57 @@ console.log('Hello World');
             }
             
             // レビュー処理
-            alert('レビューを開始します...');
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const selectedRenderer = document.querySelector('input[name="renderer"]:checked')?.value || 'SideBySide';
+                const res = await fetch('/proofread', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ content, renderer: selectedRenderer })
+                });
+
+                if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(text || 'レビューAPIエラー');
+                }
+
+                const data = await res.json();
+                const diffContainer = document.getElementById('diffContainer');
+                diffContainer.innerHTML = data.diffHtml;
+                document.getElementById('diffSection').style.display = '';
+            } catch (e) {
+                alert('レビューに失敗しました: ' + e.message);
+            }
+        });
+
+        // 変更部分のみ表示トグル
+        function toggleShowOnlyChanges(showOnly) {
+            const container = document.getElementById('diffContainer');
+            if (!container) return;
+            // レイアウトは保持し、変更のないブロックは薄く表示
+            const blocks = container.querySelectorAll('tr, td, li, p, div');
+            blocks.forEach(el => {
+                if (el === container) return;
+                if (!showOnly) {
+                    el.style.opacity = '';
+                    return;
+                }
+                const hasChange = el.querySelector('ins, del');
+                const isStructural = ['TBODY','THEAD','TABLE','TFOOT'].includes(el.tagName);
+                el.style.opacity = (hasChange || isStructural) ? '' : '0.35';
+            });
+        }
+
+        document.getElementById('showAllBtn').addEventListener('click', function() {
+            toggleShowOnlyChanges(false);
+        });
+
+        document.getElementById('showChangesOnlyBtn').addEventListener('click', function() {
+            toggleShowOnlyChanges(true);
         });
 
         document.getElementById('publishBtn').addEventListener('click', function() {
