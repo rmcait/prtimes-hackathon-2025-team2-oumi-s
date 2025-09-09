@@ -4,6 +4,7 @@ use App\Http\Controllers\PrTimesController;
 use App\Http\Controllers\StrengthAnalysisController;
 use App\Http\Controllers\WhyAnalysisController;
 use App\Http\Controllers\ProofreadController;
+use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('prtimes')->group(function () {
@@ -61,3 +62,6 @@ Route::prefix('why-analysis')->group(function () {
 
 // Proofreading API
 Route::post('/proofread', [ProofreadController::class, 'proofread']);
+
+// 6W2H Review API
+Route::post('/sixtwo-review', [ReviewController::class, 'sixTwoReview']);

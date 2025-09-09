@@ -53,6 +53,33 @@ class ReviewController extends Controller
             'sixTwoReview' => $sixTwoReview,
         ]);
     }
+
+    public function sixTwoReview(Request $request, SixTwoReviewer $sixTwo)
+    {
+        try {
+            $validated = $request->validate([
+                'content' => ['required', 'string', 'min:10', 'max:50000'],
+            ]);
+
+            $content = $validated['content'];
+            $review = $sixTwo->proofreadText($content);
+
+            return response()->json([
+                'success' => true,
+                'message' => '6W2Hレビューが完了しました',
+                'data' => [
+                    'review' => $review,
+                    'content_length' => mb_strlen($content)
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '6W2Hレビューでエラーが発生しました: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
 
 
