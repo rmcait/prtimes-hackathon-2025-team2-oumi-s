@@ -99,6 +99,21 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         maxlength="500">
                 </div>
+
+                <div class="mb-6">
+                    <label for="releaseType" class="block text-sm font-medium text-gray-700 mb-2">
+                        リリースタイプ（任意）
+                    </label>
+                    <select 
+                        id="releaseType" 
+                        name="release_type"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">-- リリースタイプを選択 --</option>
+                    </select>
+                    <div class="text-xs text-gray-500 mt-1">
+                        <span id="releaseTypeStatus">リリースタイプを読み込み中...</span>
+                    </div>
+                </div>
                 
                 <div class="flex justify-end space-x-4">
                     <button 
@@ -125,7 +140,10 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
         <div id="resultSection" class="result-section">
             <!-- 分析サマリー -->
             <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">分析結果サマリー</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">分析結果サマリー</h2>
+                    <div id="releaseTypeBadge" class="hidden px-3 py-1 bg-purple-100 text-purple-800 text-sm font-medium rounded-full"></div>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="bg-blue-50 p-4 rounded-lg">
                         <div class="text-2xl font-bold text-blue-600" id="totalStrengths">0</div>
@@ -219,12 +237,65 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
     </div>
 
     <script>
+        // リリースタイプの読み込み
+        async function loadReleaseTypes() {
+            try {
+                const response = await fetch('/api/strength-analysis/release-types', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                const select = document.getElementById('releaseType');
+                const status = document.getElementById('releaseTypeStatus');
+
+                if (result.success) {
+                    // APIからのデータか、デフォルトデータかを判定
+                    let releaseTypes = [];
+                    if (result.data.error) {
+                        // エラーがある場合はdefault_typesを使用
+                        releaseTypes = result.data.default_types || [];
+                        status.textContent = 'デフォルトのリリースタイプを表示しています';
+                        status.className = 'text-xs text-yellow-600 mt-1';
+                    } else {
+                        // 正常にAPIから取得した場合
+                        releaseTypes = result.data || [];
+                        status.textContent = 'リリースタイプを読み込みました';
+                        status.className = 'text-xs text-green-600 mt-1';
+                    }
+
+                    // セレクトボックスにオプションを追加
+                    releaseTypes.forEach(type => {
+                        const option = document.createElement('option');
+                        option.value = type.name || type.id;
+                        option.textContent = type.name;
+                        select.appendChild(option);
+                    });
+                } else {
+                    status.textContent = 'リリースタイプの読み込みに失敗しました';
+                    status.className = 'text-xs text-red-600 mt-1';
+                }
+            } catch (error) {
+                console.error('Release types loading failed:', error);
+                document.getElementById('releaseTypeStatus').textContent = 'リリースタイプの読み込みに失敗しました';
+                document.getElementById('releaseTypeStatus').className = 'text-xs text-red-600 mt-1';
+            }
+        }
+
         // 文字数カウント
         const contentTextarea = document.getElementById('content');
         const charCount = document.getElementById('charCount');
         
         contentTextarea.addEventListener('input', function() {
             charCount.textContent = this.value.length.toLocaleString();
+        });
+
+        // ページ読み込み時にリリースタイプを読み込む
+        document.addEventListener('DOMContentLoaded', function() {
+            loadReleaseTypes();
         });
 
         // フォームクリア
@@ -250,9 +321,10 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
             const formData = new FormData(event.target);
             const content = (formData.get('content') || '').trim();
             const persona = (formData.get('persona') || '').trim();
+            const releaseType = (formData.get('release_type') || '').trim();
             
             // デバッグ用ログ（本番では削除）
-            console.log('Form data:', { content: content.length, persona: persona.length });
+            console.log('Form data:', { content: content.length, persona: persona.length, releaseType: releaseType.length });
             
             if (!content) {
                 alert('記事内容を入力してください。');
@@ -277,7 +349,8 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
                     },
                     body: JSON.stringify({
                         content: content,
-                        persona: persona
+                        persona: persona,
+                        release_type: releaseType
                     })
                 });
 
@@ -327,6 +400,15 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
             document.getElementById('highImpactCount').textContent = data.summary?.high_impact_count || 0;
             document.getElementById('coveredElements').textContent = data.summary?.covered_elements?.length || 0;
             document.getElementById('missingElements').textContent = data.missing_elements?.length || 0;
+
+            // リリースタイプバッジの表示
+            const releaseTypeBadge = document.getElementById('releaseTypeBadge');
+            if (data.summary?.release_type) {
+                releaseTypeBadge.textContent = `${data.summary.release_type}向け分析`;
+                releaseTypeBadge.classList.remove('hidden');
+            } else {
+                releaseTypeBadge.classList.add('hidden');
+            }
 
             // ハイライト表示
             displayHighlights(data.highlights || []);

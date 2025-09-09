@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 class StrengthAnalyzer
 {
     protected $apiKey;
+    protected $prtimesApiKey;
     
     private $mediaHookElements = [
         'time_seasonality' => '時代性/季節性',
@@ -23,15 +24,45 @@ class StrengthAnalyzer
     public function __construct()
     {
         $this->apiKey = config('services.openai.api_key');
+        $this->prtimesApiKey = config('services.prtimes.api_key', env('PRTIMES_API_KEY'));
     }
 
-    public function analyzeStrengths(string $markdownContent, string $persona = null): array
+    public function getReleaseTypes(): array
+    {
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $this->prtimesApiKey,
+                    'Accept' => 'application/json',
+                ])
+                ->get('https://hackathon.stg-prtimes.net/api/release_types');
+
+            if ($response->failed()) {
+                throw new \Exception('PRTIMES API request failed: ' . $response->body());
+            }
+
+            return $response->json();
+        } catch (\Exception $e) {
+            return [
+                'error' => true,
+                'message' => 'リリースタイプの取得に失敗しました: ' . $e->getMessage(),
+                'default_types' => [
+                    ['id' => 1, 'name' => 'イベント'],
+                    ['id' => 2, 'name' => '新商品'],
+                    ['id' => 3, 'name' => 'サービス'],
+                    ['id' => 4, 'name' => '企業']
+                ]
+            ];
+        }
+    }
+
+    public function analyzeStrengths(string $markdownContent, ?string $persona = null, ?string $releaseType = null): array
     {
         if (empty($this->apiKey)) {
             throw new \Exception('OpenAI API key is not configured. Please set OPENAI_API_KEY in .env file.');
         }
 
-    $prompt = $this->buildAnalysisPrompt($markdownContent, $persona);
+    $prompt = $this->buildAnalysisPrompt($markdownContent, $persona, $releaseType);
         
         $response = Http::withToken($this->apiKey)
             ->timeout(60) // 分析は時間がかかる可能性があるため長めに設定
@@ -60,6 +91,8 @@ class StrengthAnalyzer
     private function getSystemPrompt(): string
     {
         return "あなたは PR TIMES の記事分析エキスパートです。
+
+与えられた記事はプレスリリース（企業の新商品・サービス発表、イベント告知、調査結果発表など）として配信される予定のコンテンツです。プレスリリースの効果的な情報発信の観点から分析を行ってください。
         
 与えられた Markdown 形式の記事（タイトル・画像・本文を含む全文）から企業や組織の強みを抽出し、メディアフック9要素で分類してください。
 
@@ -79,6 +112,16 @@ class StrengthAnalyzer
 8. 特級性/希少性 (Superlative/Rarity): 数値による特別感や希少性
 9. 意外性 (Unexpectedness): 予想外の展開や驚きの要素
 
+リリースタイプ別の分析ポイント:
+- 商品サービス: 機能性、競合優位性、市場価値に注目
+- イベント: 参加価値、体験の独自性、話題性に注目
+- キャンペーン: 限定性、お得感、参加しやすさに注目
+- 経営情報: 信頼性、透明性、将来性に注目
+- 調査レポート: データの信頼性、社会的意義、新発見に注目
+- 人物: 専門性、人間性、影響力に注目
+- 上場企業決算発表: 成長性、安定性、投資価値に注目
+- その他: コンテンツの独自性と価値に注目
+
 画像について:
 - 記事に![](画像URL)が含まれる場合、「画像/映像」要素として強みを評価してください
 - 画像のalt属性やファイル名からも内容を推測し、分析に活用してください
@@ -86,26 +129,30 @@ class StrengthAnalyzer
 分析結果は必ず JSON 形式で返してください。";
     }
 
-    private function buildAnalysisPrompt(string $content, ?string $persona = null): string
+    private function buildAnalysisPrompt(string $content, ?string $persona = null, ?string $releaseType = null): string
     {
         $personaText = $persona ? "【企業が伝えたい生活者の人物像】\n{$persona}\n" : "";
-        return "以下のMarkdown記事（タイトル・画像・本文を含む全文）を分析して、企業や組織の強みを抽出し、メディアフック9要素で分類してください。\n\n"
+        $releaseTypeText = $releaseType ? "【リリースタイプ】\n{$releaseType}\n" : "";
+        return "以下のプレスリリース用Markdown記事（タイトル・画像・本文を含む全文）を分析して、企業や組織の強みを抽出し、メディアフック9要素で分類してください。\n\n"
+            . "【分析対象】\nプレスリリースとして配信予定のコンテンツです。メディアや読者に効果的に情報を伝えるための強みを重視して分析してください。\n\n"
             . $personaText
+            . $releaseTypeText
             . "【記事全文】\n{$content}\n\n"
             . "【分析要求】\n"
-            . "1. 記事から強みを抽出してください（タイトル、画像、本文すべてから分析）\n"
+            . "1. プレスリリースとしての訴求力を評価しながら、記事から強みを抽出してください（タイトル、画像、本文すべてから分析）\n"
             . "2. 各強みをメディアフック9要素で分類してください\n"
             . "3. 画像が含まれる場合は「画像/映像」要素として評価してください\n"
-            . "4. インパクトスコア（低/中/高）を付けてください\n"
-            . "5. 不足している要素があれば指摘してください\n"
-            . "6. 特に優れた強みをハイライトしてください\n"
-            . "7. 企業が伝えたい生活者の人物像（上記）になりきって、記事を読んだ感想を1～2文で出力してください（率直な印象や共感ポイント、疑問点など）。\n"
+            . "4. プレスリリースとしてのインパクトスコア（低/中/高）を付けてください\n"
+            . "5. プレスリリースとして不足している要素があれば指摘してください\n"
+            . "6. プレスリリースとして特に優れた強みをハイライトしてください\n"
+            . "7. 企業が伝えたい生活者の人物像（上記）になりきって、このプレスリリースを読んだ感想を1～2文で出力してください（率直な印象や共感ポイント、疑問点など）。\n"
+            . ($releaseType ? "8. リリースタイプ「{$releaseType}」の観点から、このタイプに最も適した強みの抽出と評価を重視してください。該当するリリースタイプの特性に基づいて分析の重点を調整してください。\n" : "8. リリースタイプが指定されていないため、汎用的な分析を行ってください。\n")
             . "\n【出力形式】\n以下のJSON形式で出力してください：\n\n"
             . "```json\n{\n"
             . "  \"strengths\": [\n    {\n      \"content\": \"抽出された強み文\",\n      \"category\": \"メディアフック要素名\",\n      \"impact_score\": \"低/中/高\",\n      \"type\": \"定量/定性\",\n      \"position\": \"見出しや段落の位置情報\"\n    }\n  ],\n"
-            . "  \"missing_elements\": [\n    {\n      \"element\": \"不足要素名\",\n      \"suggestion\": \"具体的な改善提案\"\n    }\n  ],\n"
-            . "  \"highlights\": [\n    {\n      \"content\": \"特に優れた強み\",\n      \"reason\": \"優れている理由\"\n    }\n  ],\n"
-            . "  \"summary\": {\n    \"total_strengths\": 抽出した強みの総数,\n    \"high_impact_count\": 高インパクトの強みの数,\n    \"covered_elements\": [\"カバーしている要素のリスト\"],\n    \"reference_url\": \"https://prtimes.jp/magazine/media-hook/\"\n  },\n"
+            . "  \"missing_elements\": [\n    {\n      \"element\": \"不足要素名\",\n      \"suggestion\": \"具体的な改善提案（リリースタイプに応じた提案を含める）\"\n    }\n  ],\n"
+            . "  \"highlights\": [\n    {\n      \"content\": \"特に優れた強み\",\n      \"reason\": \"優れている理由（リリースタイプの観点も含める）\"\n    }\n  ],\n"
+            . "  \"summary\": {\n    \"total_strengths\": 抽出した強みの総数,\n    \"high_impact_count\": 高インパクトの強みの数,\n    \"covered_elements\": [\"カバーしている要素のリスト\"],\n    \"release_type\": \"指定されたリリースタイプ（なければnull）\",\n    \"reference_url\": \"https://prtimes.jp/magazine/media-hook/\"\n  },\n"
             . "  \"persona_feedback\": \"全体的な印象（1文）、疑問点や気になる点があれば（1～2文、なければ空文字）、人物像のユーザーが感じた良い点や共感ポイント（1～2文）\"\n"
             . "}\n```
 ";
