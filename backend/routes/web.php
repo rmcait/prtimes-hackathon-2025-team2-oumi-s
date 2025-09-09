@@ -1,11 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::get('/review', function () {
-    return view('review');
+    return Inertia::render('Review');
 });
