@@ -210,7 +210,14 @@
                     • 気づかなかった価値の発見<br>
                     • 本質的なストーリーの明確化<br>
                     • PR活用のためのポイント整理<br>
-                    • 感情に訴える要素の特定</p>
+                    • 感情に訴える要素の特定<br>
+                    • <strong>具体的な記事活用例の提示</strong></p>
+                    
+                    <p><strong>記事活用例について：</strong><br>
+                    • タイトル改善の具体案<br>
+                    • リード文での価値訴求方法<br>
+                    • 本文での効果的な表現例<br>
+                    • 各セクションでの活用理由も解説</p>
                     
                     <p><strong>参考：</strong><br>
                     <a href="https://www.keyence.co.jp/ss/general/manufacture-tips/5whys.jsp" target="_blank" class="text-blue-600 hover:underline">なぜなぜ分析について</a></p>
@@ -352,6 +359,11 @@
                     addBotMessage(result.data.bot_response);
                     updateAnalysisStage(result.data.analysis_stage);
                     
+                    // 記事活用ヒントがあれば表示
+                    if (result.data.article_hint && result.data.article_hint !== 'null') {
+                        addArticleHint(result.data.article_hint);
+                    }
+                    
                     // チャット履歴に追加
                     chatHistory.push({
                         type: 'bot_question',
@@ -454,6 +466,23 @@
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
+        function addArticleHint(hint) {
+            const chatContainer = document.getElementById('chatContainer');
+            const hintDiv = document.createElement('div');
+            hintDiv.className = 'mb-3 p-3 bg-gradient-to-r from-cyan-50 to-blue-50 border-l-4 border-cyan-400 rounded-r-lg';
+            hintDiv.innerHTML = `
+                <div class="flex items-start space-x-2">
+                    <div class="w-6 h-6 bg-cyan-100 rounded-full flex items-center justify-center text-xs">💡</div>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-cyan-800 mb-1">記事活用ヒント</div>
+                        <div class="text-sm text-cyan-700">${escapeHtml(hint)}</div>
+                    </div>
+                </div>
+            `;
+            chatContainer.appendChild(hintDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
         function updateAnalysisStage(stage) {
             document.getElementById('analysisStage').textContent = `ステージ ${stage}`;
         }
@@ -512,6 +541,45 @@
                         <ul class="list-disc list-inside space-y-1 text-gray-700">
                             ${(data.emotional_hooks || []).map(hook => `<li>${escapeHtml(hook)}</li>`).join('')}
                         </ul>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-cyan-50 to-blue-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-gray-800 mb-4">💡 記事活用例</h3>
+                        ${(data.article_applications || []).map(app => `
+                            <div class="mb-6 p-4 bg-white bg-opacity-70 rounded-lg shadow-sm border">
+                                <div class="flex items-center mb-3">
+                                    <span class="inline-block px-3 py-1 bg-cyan-100 text-cyan-800 text-sm font-medium rounded-full mr-3">${escapeHtml(app.section || '')}</span>
+                                    <span class="text-sm text-gray-600 flex-1">${escapeHtml(app.reason || '')}</span>
+                                </div>
+                                
+                                ${app.before_example ? `
+                                    <div class="mb-3">
+                                        <span class="text-xs text-red-600 font-medium">❌ 改善前:</span>
+                                        <div class="mt-1 p-2 bg-red-50 border-l-3 border-red-300 text-sm text-gray-700">
+                                            ${escapeHtml(app.before_example)}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${app.after_example || app.suggestion ? `
+                                    <div class="mb-3">
+                                        <span class="text-xs text-green-600 font-medium">✅ 改善後:</span>
+                                        <div class="mt-1 p-2 bg-green-50 border-l-3 border-green-300 text-sm text-gray-700 font-medium">
+                                            ${escapeHtml(app.after_example || app.suggestion || '')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${app.tips ? `
+                                    <div class="mt-2">
+                                        <span class="text-xs text-blue-600 font-medium">💡 コツ:</span>
+                                        <div class="mt-1 p-2 bg-blue-50 border-l-3 border-blue-300 text-xs text-gray-600">
+                                            ${escapeHtml(app.tips)}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `;
