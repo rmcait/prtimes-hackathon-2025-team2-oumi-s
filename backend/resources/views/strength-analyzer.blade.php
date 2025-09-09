@@ -58,34 +58,27 @@
             
             <form id="analysisForm" onsubmit="analyzeStrengths(event)">
                 <div class="mb-6">
-                    <label for="filename" class="block text-sm font-medium text-gray-700 mb-2">
-                        記事タイトル（オプション）
-                    </label>
-                    <input 
-                        type="text" 
-                        id="filename" 
-                        name="filename"
-                        placeholder="例: PR TIMESハッカソン2025" 
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    >
-                </div>
-                
-                <div class="mb-6">
                     <label for="content" class="block text-sm font-medium text-gray-700 mb-2">
-                        記事内容（Markdown形式）
+                        記事全文（Markdown形式・タイトル含む）
                         <span class="text-gray-500 text-xs">* 最大50,000文字</span>
                     </label>
                     <textarea 
                         id="content" 
                         name="content"
                         rows="15" 
-                        placeholder="# 記事タイトル
+                        placeholder="# チーム開発×データ分析に挑む3Daysハッカソン受付開始 
+
+![PR TIMES HACKATHON]( https://prtimes.jp/api/file.php?t=origin&f=d112-1552-a6dd09c5580a91f669c7-0.jpg )
 
 **プレスリリース配信サービス「PR TIMES」等を運営する株式会社PR TIMES（東京都港区、代表取締役：山口拓己、東証プライム：3922）は、2026・27年卒業予定のエンジニア志望学生を対象に、「PR TIMES HACKATHON 2025 Summer」を開催します。**
 
 ## 同世代エンジニアとつながり、チーム開発の経験を積める3日間
 
-PR TIMESハッカソンは、2016年より開催している内定直結型のハッカソンイベントです。..."
+PR TIMESハッカソンは、2016年より開催している内定直結型のハッカソンイベントです。2025年9月8日〜10日の3日間でWebサービスの開発を行い、特に優秀な方には **年収500万円以上の中途採用基準での内定** をお出しします。
+
+## 累計200万件超のデータ分析を通してWebサービスを開発
+
+今回のテーマは **「プレスリリースを改善するためのレビュー機能を持ったWebサービスの開発」** です。PR TIMESの累計200万件超のプレスリリースデータをAPIとして提供します。"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-y"
                         required
                         maxlength="50000"></textarea>
@@ -95,13 +88,6 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
                 </div>
                 
                 <div class="flex justify-end space-x-4">
-                    <button 
-                        type="button" 
-                        onclick="clearForm()"
-                        class="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        クリア
-                    </button>
                     <button 
                         type="submit"
                         id="analyzeButton" 
@@ -193,8 +179,8 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
                     Markdown形式の記事から企業・組織の強みを自動抽出し、PR TIMES独自の「メディアフック9要素」で分類・分析します。</p>
                     
                     <p><strong>使い方：</strong><br>
-                    1. 記事タイトル（任意）を入力<br>
-                    2. Markdown形式で記事内容を入力<br>
+                    1. ファイル名（任意）を入力<br>
+                    2. Markdown形式でタイトルを含む記事全文を入力<br>
                     3. 「強みを分析する」ボタンをクリック</p>
                     
                     <p><strong>分析結果：</strong><br>
