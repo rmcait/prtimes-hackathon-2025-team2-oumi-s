@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PrTimesController;
+use App\Http\Controllers\ProofreadController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('prtimes')->group(function () {
@@ -26,3 +27,6 @@ Route::prefix('prtimes')->group(function () {
     Route::get('/prefectures', [PrTimesController::class, 'getPrefectures']);
     Route::get('/release-types', [PrTimesController::class, 'getReleaseTypes']);
 });
+
+// Proofreading API
+Route::post('/proofread', [ProofreadController::class, 'proofread']);
