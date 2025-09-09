@@ -38,5 +38,10 @@ return [
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
     ],
+ 
+    'prtimes' => [
+        'token' => env('PRTIMES_API_TOKEN'),
+        'base_url' => env('PRTIMES_API_BASE_URL', 'https://hackathon.stg-prtimes.net'),
+    ],
 
 ];
