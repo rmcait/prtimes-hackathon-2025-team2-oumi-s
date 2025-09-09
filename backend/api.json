@@ -1,0 +1,538 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "PRTIMES \u30cf\u30c3\u30ab\u30bd\u30f3 API",
+        "version": "0.0.1",
+        "description": "PRTIMES \u30cf\u30c3\u30ab\u30bd\u30f3 API \u30c9\u30ad\u30e5\u30e1\u30f3\u30c8 - PRTIMES\u306e\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u3001\u4f01\u696d\u3001\u30ab\u30c6\u30b4\u30ea\u60c5\u5831\u3078\u30a2\u30af\u30bb\u30b9\u3059\u308b\u305f\u3081\u306e\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u96c6\u3067\u3059\u3002"
+    },
+    "servers": [
+        {
+            "url": "http://localhost/api/prtimes"
+        }
+    ],
+    "paths": {
+        "/companies": {
+            "get": {
+                "operationId": "getCompanies",
+                "description": "PRTIMES API\u304b\u3089\u4f01\u696d\u4e00\u89a7\u3092\u30da\u30fc\u30b8\u30f3\u30b0\u4ed8\u304d\u3067\u53d6\u5f97\u3057\u307e\u3059\u3002",
+                "summary": "\u4f01\u696d\u4e00\u89a7\u53d6\u5f97",
+                "tags": [
+                    "PRTIMES API",
+                    "PrTimes"
+                ],
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": 100
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}": {
+            "get": {
+                "operationId": "getCompany",
+                "description": "\u7279\u5b9a\u306e\u4f01\u696d\u306e\u8a73\u7d30\u60c5\u5831\u3092\u53d6\u5f97\u3057\u307e\u3059\u3002",
+                "summary": "\u4f01\u696d\u8a73\u7d30\u53d6\u5f97",
+                "tags": [
+                    "PRTIMES API",
+                    "PrTimes"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/releases": {
+            "get": {
+                "operationId": "prTimes.getCompanyReleases",
+                "description": "\u7279\u5b9a\u306e\u4f01\u696d\u306e\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u4e00\u89a7\u3092\u53d6\u5f97\u3057\u307e\u3059\u3002",
+                "summary": "\u4f01\u696d\u5225\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u4e00\u89a7\u53d6\u5f97",
+                "tags": [
+                    "PRTIMES API",
+                    "PrTimes"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": 100
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "from_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "to_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/releases/{releaseId}": {
+            "get": {
+                "operationId": "prTimes.getRelease",
+                "description": "\u7279\u5b9a\u306e\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u306e\u8a73\u7d30\u60c5\u5831\u3092\u53d6\u5f97\u3057\u307e\u3059\u3002",
+                "summary": "\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u8a73\u7d30\u53d6\u5f97",
+                "tags": [
+                    "PRTIMES API",
+                    "PrTimes"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "releaseId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/companies/{companyId}/releases/{releaseId}/statistics": {
+            "get": {
+                "operationId": "prTimes.getReleaseStatistics",
+                "description": "\u7279\u5b9a\u306e\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u306e\u95b2\u89a7\u7d71\u8a08\u306a\u3069\u306e\u60c5\u5831\u3092\u53d6\u5f97\u3057\u307e\u3059\u3002",
+                "summary": "\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u7d71\u8a08\u53d6\u5f97",
+                "tags": [
+                    "PRTIMES API",
+                    "PrTimes"
+                ],
+                "parameters": [
+                    {
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "releaseId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/releases": {
+            "get": {
+                "operationId": "getReleases",
+                "description": "\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u4e00\u89a7\u3092\u30da\u30fc\u30b8\u30f3\u30b0\u4ed8\u304d\u3067\u53d6\u5f97\u3057\u307e\u3059\u3002\u65e5\u4ed8\u7bc4\u56f2\u3067\u306e\u30d5\u30a3\u30eb\u30bf\u30ea\u30f3\u30b0\u3082\u53ef\u80fd\u3067\u3059\u3002",
+                "summary": "\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u4e00\u89a7\u53d6\u5f97",
+                "tags": [
+                    "PRTIMES API",
+                    "PrTimes"
+                ],
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": 100
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "from_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "to_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/releases/movie": {
+            "get": {
+                "operationId": "prTimes.getMovieReleases",
+                "description": "\u52d5\u753b\u304c\u4ed8\u3044\u3066\u3044\u308b\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u4e00\u89a7\u3092\u53d6\u5f97\u3057\u307e\u3059\u3002",
+                "summary": "\u52d5\u753b\u4ed8\u304d\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u4e00\u89a7\u53d6\u5f97",
+                "tags": [
+                    "PRTIMES API",
+                    "PrTimes"
+                ],
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": 100
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "from_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "to_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/categories": {
+            "get": {
+                "operationId": "getCategories",
+                "description": "\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u30ab\u30c6\u30b4\u30ea\u4e00\u89a7\u3092\u30da\u30fc\u30b8\u30f3\u30b0\u4ed8\u304d\u3067\u53d6\u5f97\u3057\u307e\u3059\u3002",
+                "summary": "\u30ab\u30c6\u30b4\u30ea\u4e00\u89a7\u53d6\u5f97",
+                "tags": [
+                    "PRTIMES API",
+                    "PrTimes"
+                ],
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": 100
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/categories/{categoryId}": {
+            "get": {
+                "operationId": "prTimes.getCategory",
+                "description": "\u7279\u5b9a\u306e\u30ab\u30c6\u30b4\u30ea\u306e\u8a73\u7d30\u60c5\u5831\u3092\u53d6\u5f97\u3057\u307e\u3059\u3002",
+                "summary": "\u30ab\u30c6\u30b4\u30ea\u8a73\u7d30\u53d6\u5f97",
+                "tags": [
+                    "PRTIMES API",
+                    "PrTimes"
+                ],
+                "parameters": [
+                    {
+                        "name": "categoryId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/categories/{categoryId}/releases": {
+            "get": {
+                "operationId": "prTimes.getCategoryReleases",
+                "description": "\u7279\u5b9a\u306e\u30ab\u30c6\u30b4\u30ea\u306e\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u4e00\u89a7\u3092\u53d6\u5f97\u3057\u307e\u3059\u3002",
+                "summary": "\u30ab\u30c6\u30b4\u30ea\u5225\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u4e00\u89a7\u53d6\u5f97",
+                "tags": [
+                    "PRTIMES API",
+                    "PrTimes"
+                ],
+                "parameters": [
+                    {
+                        "name": "categoryId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": 100
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "from_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "to_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/prefectures": {
+            "get": {
+                "operationId": "prTimes.getPrefectures",
+                "description": "\u90fd\u9053\u5e9c\u770c\u4e00\u89a7\u3092\u53d6\u5f97\u3057\u307e\u3059\u3002",
+                "summary": "\u90fd\u9053\u5e9c\u770c\u4e00\u89a7\u53d6\u5f97",
+                "tags": [
+                    "PRTIMES API",
+                    "PrTimes"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/release-types": {
+            "get": {
+                "operationId": "prTimes.getReleaseTypes",
+                "description": "\u30d7\u30ec\u30b9\u30ea\u30ea\u30fc\u30b9\u30bf\u30a4\u30d7\u4e00\u89a7\u3092\u53d6\u5f97\u3057\u307e\u3059\u3002",
+                "summary": "\u30ea\u30ea\u30fc\u30b9\u30bf\u30a4\u30d7\u4e00\u89a7\u53d6\u5f97",
+                "tags": [
+                    "PRTIMES API",
+                    "PrTimes"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
