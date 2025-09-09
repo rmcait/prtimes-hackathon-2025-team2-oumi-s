@@ -25,13 +25,13 @@ class StrengthAnalyzer
         $this->apiKey = config('services.openai.api_key');
     }
 
-    public function analyzeStrengths(string $markdownContent): array
+    public function analyzeStrengths(string $markdownContent, string $persona = null): array
     {
         if (empty($this->apiKey)) {
             throw new \Exception('OpenAI API key is not configured. Please set OPENAI_API_KEY in .env file.');
         }
 
-        $prompt = $this->buildAnalysisPrompt($markdownContent);
+    $prompt = $this->buildAnalysisPrompt($markdownContent, $persona);
         
         $response = Http::withToken($this->apiKey)
             ->timeout(60) // 分析は時間がかかる可能性があるため長めに設定
@@ -86,57 +86,30 @@ class StrengthAnalyzer
 分析結果は必ず JSON 形式で返してください。";
     }
 
-    private function buildAnalysisPrompt(string $content): string
+    private function buildAnalysisPrompt(string $content, ?string $persona = null): string
     {
-        return "以下のMarkdown記事（タイトル・画像・本文を含む全文）を分析して、企業や組織の強みを抽出し、メディアフック9要素で分類してください。
-
-【記事全文】
-{$content}
-
-【分析要求】
-1. 記事から強みを抽出してください（タイトル、画像、本文すべてから分析）
-2. 各強みをメディアフック9要素で分類してください
-3. 画像が含まれる場合は「画像/映像」要素として評価してください
-4. インパクトスコア（低/中/高）を付けてください
-5. 不足している要素があれば指摘してください
-6. 特に優れた強みをハイライトしてください
-
-【出力形式】
-以下のJSON形式で出力してください：
-
-```json
-{
-  \"strengths\": [
-    {
-      \"content\": \"抽出された強み文\",
-      \"category\": \"メディアフック要素名\",
-      \"impact_score\": \"低/中/高\",
-      \"type\": \"定量/定性\",
-      \"position\": \"見出しや段落の位置情報\"
+        $personaText = $persona ? "【企業が伝えたい生活者の人物像】\n{$persona}\n" : "";
+        return "以下のMarkdown記事（タイトル・画像・本文を含む全文）を分析して、企業や組織の強みを抽出し、メディアフック9要素で分類してください。\n\n"
+            . $personaText
+            . "【記事全文】\n{$content}\n\n"
+            . "【分析要求】\n"
+            . "1. 記事から強みを抽出してください（タイトル、画像、本文すべてから分析）\n"
+            . "2. 各強みをメディアフック9要素で分類してください\n"
+            . "3. 画像が含まれる場合は「画像/映像」要素として評価してください\n"
+            . "4. インパクトスコア（低/中/高）を付けてください\n"
+            . "5. 不足している要素があれば指摘してください\n"
+            . "6. 特に優れた強みをハイライトしてください\n"
+            . "7. 企業が伝えたい生活者の人物像（上記）になりきって、記事を読んだ感想を1～2文で出力してください（率直な印象や共感ポイント、疑問点など）。\n"
+            . "\n【出力形式】\n以下のJSON形式で出力してください：\n\n"
+            . "```json\n{\n"
+            . "  \"strengths\": [\n    {\n      \"content\": \"抽出された強み文\",\n      \"category\": \"メディアフック要素名\",\n      \"impact_score\": \"低/中/高\",\n      \"type\": \"定量/定性\",\n      \"position\": \"見出しや段落の位置情報\"\n    }\n  ],\n"
+            . "  \"missing_elements\": [\n    {\n      \"element\": \"不足要素名\",\n      \"suggestion\": \"具体的な改善提案\"\n    }\n  ],\n"
+            . "  \"highlights\": [\n    {\n      \"content\": \"特に優れた強み\",\n      \"reason\": \"優れている理由\"\n    }\n  ],\n"
+            . "  \"summary\": {\n    \"total_strengths\": 抽出した強みの総数,\n    \"high_impact_count\": 高インパクトの強みの数,\n    \"covered_elements\": [\"カバーしている要素のリスト\"],\n    \"reference_url\": \"https://prtimes.jp/magazine/media-hook/\"\n  },\n"
+            . "  \"persona_feedback\": \"全体的な印象（1文）、疑問点や気になる点があれば（1～2文、なければ空文字）、人物像のユーザーが感じた良い点や共感ポイント（1～2文）\"\n"
+            . "}\n```
+";
     }
-  ],
-  \"missing_elements\": [
-    {
-      \"element\": \"不足要素名\",
-      \"suggestion\": \"具体的な改善提案\"
-    }
-  ],
-  \"highlights\": [
-    {
-      \"content\": \"特に優れた強み\",
-      \"reason\": \"優れている理由\"
-    }
-  ],
-  \"summary\": {
-    \"total_strengths\": 抽出した強みの総数,
-    \"high_impact_count\": 高インパクトの強みの数,
-    \"covered_elements\": [\"カバーしている要素のリスト\"],
-    \"reference_url\": \"https://prtimes.jp/magazine/media-hook/\"
-  }
-}
-```";
-    }
-
     private function parseAnalysisResult(string $content, string $originalContent): array
     {
         // JSON部分を抽出
@@ -186,6 +159,9 @@ class StrengthAnalyzer
                 }
             }
         }
+
+        // persona_feedbackは任意のため、存在チェックのみ
+        // (personaが設定されていない場合は空になる可能性がある)
 
         return true;
     }

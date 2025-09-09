@@ -26,7 +26,7 @@ class StrengthAnalysisController extends Controller
             // バリデーション
             $validator = Validator::make($request->all(), [
                 'content' => 'required|string|min:10|max:50000',
-                'filename' => 'nullable|string|max:255',
+                'persona' => 'nullable|string|max:500',
             ]);
 
             if ($validator->fails()) {
@@ -38,15 +38,15 @@ class StrengthAnalysisController extends Controller
             }
 
             $content = $request->input('content');
-            $filename = $request->input('filename', 'unknown.md');
+            $persona = $request->input('persona');
 
             // 分析実行
             Log::info('Starting strength analysis', [
-                'filename' => $filename,
-                'content_length' => mb_strlen($content)
+                'content_length' => mb_strlen($content),
+                'persona' => $persona
             ]);
 
-            $result = $this->strengthAnalyzer->analyzeStrengths($content);
+            $result = $this->strengthAnalyzer->analyzeStrengths($content, $persona);
 
             // 結果の検証
             if (!$this->strengthAnalyzer->validateAnalysisResult($result)) {
@@ -59,13 +59,11 @@ class StrengthAnalysisController extends Controller
 
             // ファイル情報を追加
             $result['file_info'] = [
-                'filename' => $filename,
                 'uploaded_at' => now()->toISOString(),
                 'content_length' => mb_strlen($content)
             ];
 
             Log::info('Strength analysis completed successfully', [
-                'filename' => $filename,
                 'strengths_count' => count($result['strengths'] ?? [])
             ]);
 

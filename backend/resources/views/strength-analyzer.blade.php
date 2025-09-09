@@ -86,6 +86,19 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
                         <span id="charCount">0</span> / 50,000 文字
                     </div>
                 </div>
+
+                <div class="mb-6">
+                    <label for="persona" class="block text-sm font-medium text-gray-700 mb-2">
+                        伝えたい人物像（任意）
+                    </label>
+                    <input 
+                        type="text" 
+                        id="persona" 
+                        name="persona"
+                        placeholder="例: 26・27卒就活生、ハッカソン好き、内定を探している"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        maxlength="500">
+                </div>
                 
                 <div class="flex justify-end space-x-4">
                     <button 
@@ -147,8 +160,17 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
 
             <!-- 改善提案 -->
             <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">💡 改善提案</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">💡 より良くするための提案</h3>
                 <div id="suggestions"></div>
+            </div>
+
+            <!-- ターゲットユーザーの感想 -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8" id="personaFeedbackSection" style="display: none;">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">👤 ターゲットユーザーの感想</h3>
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                    <div class="text-sm text-gray-600 mb-2" id="personaDescription"></div>
+                    <div class="font-medium text-gray-800" id="personaFeedback"></div>
+                </div>
             </div>
 
             <!-- メディアフック要素カバレッジ -->
@@ -226,8 +248,11 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
             event.preventDefault();
             
             const formData = new FormData(event.target);
-            const content = formData.get('content').trim();
-            const filename = formData.get('filename') || 'article.md';
+            const content = (formData.get('content') || '').trim();
+            const persona = (formData.get('persona') || '').trim();
+            
+            // デバッグ用ログ（本番では削除）
+            console.log('Form data:', { content: content.length, persona: persona.length });
             
             if (!content) {
                 alert('記事内容を入力してください。');
@@ -252,11 +277,21 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
                     },
                     body: JSON.stringify({
                         content: content,
-                        filename: filename
+                        persona: persona
                     })
                 });
 
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API Error Response:', errorText);
+                    throw new Error(`API request failed with status ${response.status}: ${errorText}`);
+                }
+
                 const result = await response.json();
+                console.log('API Response:', result);
 
                 if (result.success) {
                     displayResults(result.data);
@@ -265,8 +300,18 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
                 }
 
             } catch (error) {
-                console.error('Error:', error);
-                alert('分析でエラーが発生しました: ' + error.message);
+                console.error('Full error object:', error);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                
+                let errorMessage = 'Unknown error occurred';
+                if (error.message) {
+                    errorMessage = error.message;
+                } else if (error.toString) {
+                    errorMessage = error.toString();
+                }
+                
+                alert('分析でエラーが発生しました: ' + errorMessage);
             } finally {
                 // UI状態復帰
                 analyzeButton.disabled = false;
@@ -291,6 +336,9 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
             
             // 改善提案表示
             displaySuggestions(data.missing_elements || []);
+            
+            // ターゲットユーザーの感想表示
+            displayPersonaFeedback(data.persona_feedback);
             
             // メディアフック要素カバレッジ表示
             displayMediahookCoverage(data.summary?.covered_elements || []);
@@ -387,6 +435,29 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
                     </div>
                 `;
             }).join('');
+        }
+
+        function displayPersonaFeedback(feedback) {
+            const section = document.getElementById('personaFeedbackSection');
+            const feedbackElement = document.getElementById('personaFeedback');
+            const descriptionElement = document.getElementById('personaDescription');
+            
+            if (feedback && feedback.trim()) {
+                // フォームから取得したpersonaを表示
+                const personaInput = document.getElementById('persona');
+                const personaValue = personaInput ? personaInput.value.trim() : '';
+                
+                if (personaValue) {
+                    descriptionElement.textContent = `「${personaValue}」の視点から：`;
+                } else {
+                    descriptionElement.textContent = 'ユーザー視点から：';
+                }
+                
+                feedbackElement.textContent = feedback;
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
         }
 
         function escapeHtml(text) {
