@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\ProofReadingServices;
+use App\Services\Proofreading;
 
 class ProofreadController extends Controller
 {
     protected $openai;
 
-    public function __construct(ProofReadingServices $openai)
+    public function __construct(Proofreading $openai)
     {
         $this->openai = $openai;
     }
