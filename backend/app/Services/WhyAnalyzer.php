@@ -19,7 +19,7 @@ class WhyAnalyzer
     public function analyzeWhy(string $content, array $chatHistory = []): array
     {
         if (empty($this->apiKey)) {
-            throw new \Exception('OpenAI API key is not configured. Please set OPENAI_API_KEY in .env file.');
+            return $this->getMockWhyAnalysis($content, $chatHistory);
         }
 
         $prompt = $this->buildWhyAnalysisPrompt($content, $chatHistory);
@@ -192,6 +192,10 @@ class WhyAnalyzer
      */
     public function generateFinalInsight(string $originalContent, array $fullChatHistory): array
     {
+        if (empty($this->apiKey)) {
+            return $this->getMockFinalInsight($originalContent, $fullChatHistory);
+        }
+
         $prompt = $this->buildFinalInsightPrompt($originalContent, $fullChatHistory);
         
         $response = Http::withToken($this->apiKey)
@@ -283,5 +287,82 @@ class WhyAnalyzer
   ]
 }
 ```";
+    }
+
+    private function getMockWhyAnalysis(string $content, array $chatHistory): array
+    {
+        if (empty($chatHistory)) {
+            return [
+                "bot_response" => "こんにちは！素晴らしい記事ですね。特に「画期的な新商品」という部分に注目しました。なぜこの商品を「画期的」だと考えているのでしょうか？",
+                "identified_element" => "画期的な新商品",
+                "analysis_stage" => 1,
+                "minimum_reached" => false,
+                "suggested_follow_up" => "商品の独自性について詳しく聞く",
+                "analysis_metadata" => [
+                    "analyzed_at" => now()->toISOString(),
+                    "processing_status" => "completed_demo_mode",
+                    "analysis_type" => "why_analysis"
+                ]
+            ];
+        } else {
+            return [
+                "bot_response" => "なるほど、興味深いお答えですね。では、なぜそのような機能が重要だと考えたのでしょうか？",
+                "analysis_stage" => count($chatHistory) + 1,
+                "insight" => "商品の独自性に対する深い思いが見えてきました",
+                "can_continue" => true,
+                "suggested_follow_up" => "さらに深い背景を探る",
+                "minimum_reached" => count($chatHistory) >= 3,
+                "analysis_metadata" => [
+                    "analyzed_at" => now()->toISOString(),
+                    "processing_status" => "completed_demo_mode",
+                    "analysis_type" => "why_analysis"
+                ]
+            ];
+        }
+    }
+
+    private function getMockFinalInsight(string $originalContent, array $fullChatHistory): array
+    {
+        return [
+            "final_insight" => "なぜなぜ分析を通じて、この商品の本質的な価値は「ユーザーの潜在的なニーズへの深い理解」にあることが明らかになりました。",
+            "story_elements" => [
+                "2年間の継続的な開発への情熱",
+                "チーム一丸となった取り組み姿勢", 
+                "ユーザー中心の商品設計思想"
+            ],
+            "hidden_values" => [
+                "開発チームの専門性と経験",
+                "ユーザーフィードバックを活かした改善プロセス"
+            ],
+            "pr_recommendations" => [
+                "開発ストーリーを前面に押し出したメッセージング",
+                "具体的な数値（200%向上）を活用した訴求"
+            ],
+            "emotional_hooks" => [
+                "チームの情熱と努力への共感",
+                "革新的な商品への期待感"
+            ],
+            "article_applications" => [
+                [
+                    "section" => "タイトル",
+                    "before_example" => "新商品リリースについて",
+                    "after_example" => "2年の開発を経て誕生！従来比200%向上の画期的新商品",
+                    "reason" => "開発期間と具体的数値でインパクトを強化",
+                    "tips" => "数値と感情的要素を組み合わせる"
+                ],
+                [
+                    "section" => "リード文",
+                    "before_example" => "新商品をリリースします",
+                    "after_example" => "チーム一丸となった2年間の開発が実り、従来の課題を解決する画期的な商品が完成しました",
+                    "reason" => "開発ストーリーでエモーショナルな訴求を強化",
+                    "tips" => "背景ストーリーで読者の関心を引く"
+                ]
+            ],
+            "analysis_metadata" => [
+                "analyzed_at" => now()->toISOString(),
+                "processing_status" => "completed_demo_mode",
+                "analysis_type" => "final_insight"
+            ]
+        ];
     }
 }
