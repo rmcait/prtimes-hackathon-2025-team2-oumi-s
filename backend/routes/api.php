@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PrTimesController;
 use App\Http\Controllers\StrengthAnalysisController;
+use App\Http\Controllers\ProofreadController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('prtimes')->group(function () {
@@ -37,3 +38,6 @@ Route::prefix('strength-analysis')->group(function () {
     Route::get('/info', [StrengthAnalysisController::class, 'getAnalysisInfo']);
     Route::get('/health', [StrengthAnalysisController::class, 'healthCheck']);
 });
+
+// Proofreading API
+Route::post('/proofread', [ProofreadController::class, 'proofread']);
