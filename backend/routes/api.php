@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PrTimesController;
+use App\Http\Controllers\StrengthAnalysisController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('prtimes')->group(function () {
@@ -25,4 +26,14 @@ Route::prefix('prtimes')->group(function () {
     // Reference Data
     Route::get('/prefectures', [PrTimesController::class, 'getPrefectures']);
     Route::get('/release-types', [PrTimesController::class, 'getReleaseTypes']);
+});
+
+// Strength Analysis API
+Route::prefix('strength-analysis')->group(function () {
+    // 記事強み分析
+    Route::post('/analyze', [StrengthAnalysisController::class, 'analyzeStrengths']);
+    
+    // 情報取得
+    Route::get('/info', [StrengthAnalysisController::class, 'getAnalysisInfo']);
+    Route::get('/health', [StrengthAnalysisController::class, 'healthCheck']);
 });
