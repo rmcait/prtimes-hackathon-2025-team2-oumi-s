@@ -27,6 +27,7 @@ class StrengthAnalysisController extends Controller
             $validator = Validator::make($request->all(), [
                 'content' => 'required|string|min:10|max:50000',
                 'persona' => 'nullable|string|max:500',
+                'release_type' => 'nullable|string|max:100',
             ]);
 
             if ($validator->fails()) {
@@ -39,14 +40,16 @@ class StrengthAnalysisController extends Controller
 
             $content = $request->input('content');
             $persona = $request->input('persona');
+            $releaseType = $request->input('release_type');
 
             // 分析実行
             Log::info('Starting strength analysis', [
                 'content_length' => mb_strlen($content),
-                'persona' => $persona
+                'persona' => $persona,
+                'release_type' => $releaseType
             ]);
 
-            $result = $this->strengthAnalyzer->analyzeStrengths($content, $persona);
+            $result = $this->strengthAnalyzer->analyzeStrengths($content, $persona, $releaseType);
 
             // 結果の検証
             if (!$this->strengthAnalyzer->validateAnalysisResult($result)) {
@@ -86,6 +89,32 @@ class StrengthAnalysisController extends Controller
         }
     }
 
+
+    /**
+     * リリースタイプ一覧を取得
+     */
+    public function getReleaseTypes(): JsonResponse
+    {
+        try {
+            $releaseTypes = $this->strengthAnalyzer->getReleaseTypes();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'リリースタイプを取得しました',
+                'data' => $releaseTypes
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to get release types', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'リリースタイプの取得に失敗しました: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     /**
      * 分析機能の情報を取得

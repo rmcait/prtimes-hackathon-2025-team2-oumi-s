@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PrTimesController;
 use App\Http\Controllers\StrengthAnalysisController;
+use App\Http\Controllers\WhyAnalysisController;
 use App\Http\Controllers\ProofreadController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,9 +35,28 @@ Route::prefix('strength-analysis')->group(function () {
     // 記事強み分析
     Route::post('/analyze', [StrengthAnalysisController::class, 'analyzeStrengths']);
     
+    // リリースタイプ取得
+    Route::get('/release-types', [StrengthAnalysisController::class, 'getReleaseTypes']);
+    
     // 情報取得
     Route::get('/info', [StrengthAnalysisController::class, 'getAnalysisInfo']);
     Route::get('/health', [StrengthAnalysisController::class, 'healthCheck']);
+});
+
+// Why Analysis API (なぜなぜ分析チャットボット)
+Route::prefix('why-analysis')->group(function () {
+    // なぜなぜ分析開始
+    Route::post('/start', [WhyAnalysisController::class, 'startAnalysis']);
+    
+    // 会話継続
+    Route::post('/continue', [WhyAnalysisController::class, 'continueAnalysis']);
+    
+    // 最終洞察生成
+    Route::post('/insight', [WhyAnalysisController::class, 'generateInsight']);
+    
+    // 情報取得
+    Route::get('/info', [WhyAnalysisController::class, 'getAnalysisInfo']);
+    Route::get('/health', [WhyAnalysisController::class, 'healthCheck']);
 });
 
 // Proofreading API
