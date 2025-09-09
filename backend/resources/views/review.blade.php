@@ -423,6 +423,11 @@ console.log('Hello World');
                 <div id="diffContainer" class="Diff"></div>
             </div>
 
+            <div class="section" id="sixTwoSection" style="display:none;">
+                <h2 class="section-title">6W2H レビュー</h2>
+                <div id="sixTwoContent" style="white-space:pre-wrap; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;"></div>
+            </div>
+
             <div class="action-buttons display-flex">
                 <button class="btn btn-secondary" id="reviewBtn">
                     レビュー
@@ -525,6 +530,13 @@ console.log('Hello World');
                 const diffContainer = document.getElementById('diffContainer');
                 diffContainer.innerHTML = data.diffHtml;
                 document.getElementById('diffSection').style.display = '';
+
+                // 6W2H レビュー
+                if (data.sixTwoReview) {
+                    const sixTwo = document.getElementById('sixTwoContent');
+                    sixTwo.textContent = data.sixTwoReview;
+                    document.getElementById('sixTwoSection').style.display = '';
+                }
             } catch (e) {
                 alert('レビューに失敗しました: ' + e.message);
             }

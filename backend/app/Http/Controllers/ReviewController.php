@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\Proofreading;
 use Jfcherng\Diff\DiffHelper;
+use App\services\SixTwoReviewer;
 
 class ReviewController extends Controller
 {
@@ -13,7 +14,7 @@ class ReviewController extends Controller
         return view('review');
     }
 
-    public function proofread(Request $request, Proofreading $proofreading)
+    public function proofread(Request $request, Proofreading $proofreading, SixTwoReviewer $sixTwo)
     {
         $validated = $request->validate([
             'content' => ['required', 'string'],
@@ -22,6 +23,7 @@ class ReviewController extends Controller
 
         $original = $validated['content'];
         $proofread = $proofreading->proofreadText($original);
+        $sixTwoReview = $sixTwo->proofreadText($original);
 
         $renderer = $validated['renderer'] ?? 'SideBySide';
         if (!in_array($renderer, ['Inline', 'SideBySide'], true)) {
@@ -48,6 +50,7 @@ class ReviewController extends Controller
             'proofread' => $proofread,
             'diffHtml' => $diffHtml,
             'renderer' => $renderer,
+            'sixTwoReview' => $sixTwoReview,
         ]);
     }
 }
