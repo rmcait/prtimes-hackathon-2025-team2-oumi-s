@@ -15,7 +15,7 @@ class SixTwoReviewer{
     public function proofreadText(string $text): string
     {
         if (empty($this->apiKey)) {
-            throw new \Exception('OpenAI API key is not configured. Please set OPENAI_API_KEY in .env file.');
+            return $this->getMockSixTwoReview($text);
         }
 
         $response = Http::withToken($this->apiKey)
@@ -41,4 +41,26 @@ class SixTwoReviewer{
         return $content;
     }
 
+    private function getMockSixTwoReview(string $text): string
+    {
+        return "## 6W2Hレビュー結果（デモモード）
+
+**📋 現在の記事の6W2H状況:**
+
+✅ **Who（誰が）**: 企業・開発チームが明記されています
+✅ **What（何を）**: 新商品の内容が記載されています  
+✅ **When（いつ）**: 来月リリース予定と明記
+❌ **Where（どこで）**: 販売場所・対象地域が不明
+⚠️  **Why（なぜ）**: 開発理由はあるが、より具体的な背景があると良い
+✅ **How（どのように）**: 機能の説明がされています
+❌ **How much（いくら）**: 価格情報が含まれていません
+⚠️  **How many（どのくらい）**: 数量や規模の情報が限定的
+
+**💡 改善提案:**
+- 販売チャネルや対象地域を明記
+- 価格帯の情報を追加
+- 生産数量や市場規模の情報を補完
+
+**⭐ 全体評価:** 6W2Hの要素のうち5つが含まれており、基本的な情報は網羅されています。価格と場所の情報を追加することで、より完成度の高い記事になるでしょう。";
+    }
 }

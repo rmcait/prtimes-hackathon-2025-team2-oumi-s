@@ -55,6 +55,9 @@
                     <span class="ml-3 px-3 py-1 bg-purple-100 text-purple-800 text-sm font-medium rounded-full">PR TIMES</span>
                 </div>
                 <div class="flex space-x-4">
+                    <button id="backToReviewBtn" onclick="returnToCommentReview()" class="hidden px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                        ← コメントレビューに戻る
+                    </button>
                     <a href="#" class="text-gray-500 hover:text-gray-700" onclick="showInfo()">使い方</a>
                     <a href="/api/why-analysis/health" target="_blank" class="text-gray-500 hover:text-gray-700">API状態</a>
                 </div>
@@ -166,12 +169,6 @@
                     >
                         🎯 最終洞察を生成
                     </button>
-                    <button 
-                        onclick="resetChat()"
-                        class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                    >
-                        🔄 新しい分析を開始
-                    </button>
                 </div>
             </div>
         </div>
@@ -180,6 +177,20 @@
         <div class="bg-white rounded-lg shadow-lg p-6 hidden" id="insightSection">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">🎯 最終洞察とストーリー</h2>
             <div id="insightContent"></div>
+        </div>
+
+        <!-- 下部戻るボタン -->
+        <div class="mt-8 text-center" id="bottomBackButton" style="display: none;">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">分析完了</h3>
+                <p class="text-gray-600 mb-4">なぜなぜ分析が完了しました。コメントレビューページに戻って、全ての分析結果を統合して確認できます。</p>
+                <button onclick="returnToCommentReview()" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center mx-auto">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    コメントレビューに戻る
+                </button>
+            </div>
         </div>
     </main>
 
@@ -230,6 +241,44 @@
         let currentSession = null;
         let chatHistory = [];
         let originalContent = '';
+
+        // ローカルストレージに現在の状態を保存する共通関数
+        function saveCurrentStateToLocalStorage() {
+            // 既存の完了した分析結果をチェック
+            const existingData = localStorage.getItem('whyAnalysisResults');
+            let shouldSave = true;
+            
+            if (existingData) {
+                try {
+                    const existing = JSON.parse(existingData);
+                    // 既に完了している場合は、新しい洞察がない限り上書きしない
+                    if (existing.analysis_complete && existing.insights && 
+                        (!currentSession?.insights || !currentSession.insights.trim())) {
+                        console.log('Existing complete analysis found - not overwriting with incomplete data');
+                        shouldSave = false;
+                    }
+                } catch (e) {
+                    console.error('Error parsing existing localStorage data:', e);
+                }
+            }
+            
+            if (shouldSave) {
+                const whyResults = {
+                    insights: currentSession?.insights || '',
+                    recommendations: currentSession?.recommendations || [],
+                    story_elements: currentSession?.story_elements || [],
+                    hidden_values: currentSession?.hidden_values || [],
+                    article_applications: currentSession?.article_applications || [],
+                    session_id: currentSession?.session_id || '',
+                    chat_history: chatHistory || [],
+                    analysis_complete: currentSession?.insights ? true : false,
+                    total_messages: chatHistory.length,
+                    created_at: new Date().toISOString()
+                };
+                localStorage.setItem('whyAnalysisResults', JSON.stringify(whyResults));
+                console.log('Current state saved to localStorage:', whyResults);
+            }
+        }
 
         // 文字数カウント
         const contentTextarea = document.getElementById('content');
@@ -295,6 +344,16 @@
                     addBotMessage(result.data.bot_response);
                     updateAnalysisStage(result.data.analysis_stage);
                     console.log('Initial analysis stage:', result.data.analysis_stage, 'Minimum reached:', result.data.minimum_reached);
+                    
+                    // 初期分析チャット履歴に追加
+                    chatHistory.push({
+                        type: 'bot_question',
+                        content: result.data.bot_response,
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    // ローカルストレージに保存
+                    saveCurrentStateToLocalStorage();
                     showResponseArea();
                 } else {
                     throw new Error(result.message || 'なぜなぜ分析の開始に失敗しました');
@@ -331,6 +390,9 @@
                 content: userResponse,
                 timestamp: new Date().toISOString()
             });
+
+            // ローカルストレージに保存
+            saveCurrentStateToLocalStorage();
 
             try {
                 const response = await fetch('/api/why-analysis/continue', {
@@ -370,6 +432,9 @@
                         content: result.data.bot_response,
                         timestamp: new Date().toISOString()
                     });
+
+                    // ローカルストレージに保存
+                    saveCurrentStateToLocalStorage();
 
                     // 分析段階に応じてUIを調整
                     console.log('Analysis stage:', result.data.analysis_stage, 'Minimum reached:', result.data.minimum_reached);
@@ -507,6 +572,39 @@
         }
 
         function displayFinalInsight(data) {
+            // currentSessionに洞察データを保存
+            if (currentSession) {
+                currentSession.insights = data.final_insight || '';
+                currentSession.recommendations = data.pr_recommendations || [];
+                currentSession.story_elements = data.story_elements || [];
+                currentSession.hidden_values = data.hidden_values || [];
+                currentSession.article_applications = data.article_applications || [];
+            }
+            
+            console.log('Final insight generated, updating currentSession:', currentSession);
+            
+            // 最終洞察が生成されたら常にローカルストレージに保存
+            const whyResults = {
+                insights: data.final_insight || '',
+                recommendations: data.pr_recommendations || [],
+                story_elements: data.story_elements || [],
+                hidden_values: data.hidden_values || [],
+                article_applications: data.article_applications || [],
+                session_id: currentSession?.session_id || '',
+                chat_history: chatHistory || [],
+                analysis_complete: true,
+                total_messages: chatHistory.length,
+                created_at: new Date().toISOString()
+            };
+            localStorage.setItem('whyAnalysisResults', JSON.stringify(whyResults));
+            console.log('Final insights saved to localStorage:', whyResults);
+            
+            // コメントレビューから来た場合の追加処理
+            const fromCommentReview = localStorage.getItem('whyAnalysisFrom') === 'comment-review';
+            if (fromCommentReview) {
+                console.log('Analysis was initiated from comment-review page');
+            }
+            
             const container = document.getElementById('insightContent');
             container.innerHTML = `
                 <div class="space-y-6">
@@ -585,6 +683,9 @@
             `;
             document.getElementById('insightSection').classList.remove('hidden');
             document.getElementById('insightSection').scrollIntoView({ behavior: 'smooth' });
+            
+            // 下部戻るボタンを表示
+            document.getElementById('bottomBackButton').style.display = 'block';
         }
 
         function resetChat() {
@@ -594,6 +695,7 @@
             document.getElementById('chatContainer').innerHTML = '<div class="text-center text-gray-500 text-sm" id="chatPlaceholder">チャットが開始されると、ここに会話が表示されます</div>';
             document.getElementById('chatSection').classList.add('hidden');
             document.getElementById('insightSection').classList.add('hidden');
+            document.getElementById('bottomBackButton').style.display = 'none';
             document.getElementById('content').value = '';
             charCount.textContent = '0';
         }
@@ -619,6 +721,89 @@
                 e.preventDefault();
                 sendResponse();
             }
+        });
+
+        // モーダルの外側をクリックで閉じる
+        document.getElementById('infoModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                hideInfo();
+            }
+        });
+
+        // コメントレビューから引き継いだ内容の復元
+        function restoreFromCommentReview() {
+            const savedArticle = localStorage.getItem('whyAnalysisArticle');
+            const fromCommentReview = localStorage.getItem('whyAnalysisFrom') === 'comment-review';
+            
+            if (savedArticle && fromCommentReview) {
+                // テキストエリアに記事内容を設定
+                document.getElementById('content').value = savedArticle;
+                updateCharCount();
+                
+                // 戻るボタンを表示
+                document.getElementById('backToReviewBtn').classList.remove('hidden');
+                
+                // 使用済みデータをクリア（記事内容は保持）
+                // localStorage.removeItem('whyAnalysisArticle'); // これは戻る時に必要なので残す
+            }
+        }
+
+        // コメントレビューに戻る
+        function returnToCommentReview() {
+            console.log('Returning to comment review...');
+            console.log('Current session:', currentSession);
+            console.log('Chat history:', chatHistory);
+            
+            // 分析結果があれば保存
+            if (currentSession && (currentSession.insights || chatHistory.length > 0)) {
+                const whyResults = {
+                    insights: currentSession.insights || '',
+                    recommendations: currentSession.recommendations || [],
+                    session_id: currentSession.session_id || '',
+                    chat_history: chatHistory || [],
+                    // 追加のフィールド
+                    analysis_complete: !!currentSession.insights,
+                    total_messages: chatHistory.length,
+                    created_at: new Date().toISOString()
+                };
+                
+                console.log('Saving why results to localStorage:', whyResults);
+                localStorage.setItem('whyAnalysisResults', JSON.stringify(whyResults));
+                console.log('Saved to localStorage successfully');
+            } else {
+                console.log('No session data to save');
+                // 空でも何かしらのデータを保存
+                const emptyResults = {
+                    insights: 'なぜなぜ分析を実行しましたが、具体的な洞察はまだ生成されていません。',
+                    recommendations: [],
+                    session_id: '',
+                    chat_history: chatHistory || [],
+                    analysis_complete: false,
+                    total_messages: chatHistory.length,
+                    created_at: new Date().toISOString()
+                };
+                localStorage.setItem('whyAnalysisResults', JSON.stringify(emptyResults));
+            }
+            
+            // コメントレビューページに戻る
+            window.location.href = '/comment-review?from=why-analysis';
+        }
+
+        // 文字数カウント更新
+        function updateCharCount() {
+            const content = document.getElementById('content').value;
+            const charCount = document.getElementById('charCount');
+            if (charCount) {
+                charCount.textContent = content.length.toLocaleString();
+            }
+        }
+
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            restoreFromCommentReview();
+            
+            // 文字数カウントのイベントリスナー
+            document.getElementById('content').addEventListener('input', updateCharCount);
         });
 
         // モーダルの外側をクリックで閉じる
