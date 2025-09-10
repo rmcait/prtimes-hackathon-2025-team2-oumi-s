@@ -30,7 +30,7 @@ class StrengthAnalyzer
     public function getReleaseTypes(): array
     {
         try {
-            $response = Http::timeout(30)
+            $response = Http::timeout(60)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $this->prtimesApiKey,
                     'Accept' => 'application/json',
