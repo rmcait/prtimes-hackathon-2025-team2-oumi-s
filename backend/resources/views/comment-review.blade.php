@@ -110,6 +110,9 @@
                     <button onclick="exportComments()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
                         📄 エクスポート
                     </button>
+                    <button onclick="clearAllLocalStorage()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+                        🗑️ データクリア
+                    </button>
                 </div>
             </div>
         </div>
@@ -121,13 +124,11 @@
             <!-- 左側：記事コンテンツ -->
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-lg shadow-lg">
-                    <div class="p-6 border-b border-gray-200">
-                        <div class="flex items-center justify-between mb-4">
+                    <div class="border-b border-gray-200">
+                        <!-- ステータス表示 -->
+                        <div class="flex items-center justify-between px-6 py-3 bg-gray-50">
                             <h2 class="text-xl font-semibold text-gray-800">記事編集</h2>
                             <div class="flex space-x-2">
-                                <button onclick="toggleEditMode()" id="editModeBtn" class="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full hover:bg-blue-200 transition-colors">
-                                    編集モード
-                                </button>
                                 <span class="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full" id="analysisStatus">
                                     分析完了
                                 </span>
@@ -135,6 +136,35 @@
                                     コメント: 0
                                 </span>
                             </div>
+                        </div>
+                        
+                        <!-- タブ形式のモード切り替え -->
+                        <div class="flex px-6">
+                            <button 
+                                onclick="switchToPreviewMode()" 
+                                id="previewTab" 
+                                class="px-4 py-3 text-sm font-medium text-blue-600 border-b-2 border-blue-600 bg-white transition-colors"
+                            >
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    プレビュー
+                                </span>
+                            </button>
+                            <button 
+                                onclick="switchToEditMode()" 
+                                id="editTab" 
+                                class="px-4 py-3 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 transition-colors"
+                            >
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    編集
+                                </span>
+                            </button>
                         </div>
                     </div>
                     
@@ -193,6 +223,52 @@
                             記事を分析中です...
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 全体分析結果セクション -->
+        <div id="analysisResultsSection" class="mt-8 hidden">
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                    <span class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mr-3">📊</span>
+                    全体分析結果
+                </h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- 強み分析結果 -->
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6">
+                        <h3 class="text-xl font-semibold text-blue-800 mb-4 flex items-center">
+                            <span class="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 mr-2">💪</span>
+                            強み分析
+                        </h3>
+                        <div id="strengthAnalysisResult">
+                            <!-- 強み分析結果がここに表示される -->
+                        </div>
+                    </div>
+
+                    <!-- 6W2H分析結果 -->
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6">
+                        <h3 class="text-xl font-semibold text-green-800 mb-4 flex items-center">
+                            <span class="w-6 h-6 bg-green-200 rounded-full flex items-center justify-center text-green-700 mr-2">✅</span>
+                            6W2H分析
+                        </h3>
+                        <div id="sixTwoAnalysisResult">
+                            <!-- 6W2H分析結果がここに表示される -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- なぜなぜ分析への誘導 -->
+                <div class="mt-8 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-semibold text-purple-800 mb-3 flex items-center justify-center">
+                        <span class="w-6 h-6 bg-purple-200 rounded-full flex items-center justify-center text-purple-700 mr-2">🤔</span>
+                        なぜなぜ分析
+                    </h3>
+                    <p class="text-gray-600 mb-4">記事のより深い洞察を得るために、インタラクティブな分析を行いましょう。</p>
+                    <button onclick="startWhyAnalysis()" class="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                        🚀 なぜなぜ分析を開始
+                    </button>
                 </div>
             </div>
         </div>
@@ -320,6 +396,23 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
         let analysisResults = {};
         let isEditMode = false;
         let originalContent = '';
+        let currentMarkdown = '';
+
+        // 分析結果をローカルストレージに保存する共通関数
+        function saveAnalysisResults() {
+            try {
+                localStorage.setItem('commentReviewAnalysisResults', JSON.stringify(analysisResults));
+                localStorage.setItem('commentReviewComments', JSON.stringify(currentComments));
+                localStorage.setItem('commentReviewMarkdown', currentMarkdown);
+                console.log('Analysis results saved to localStorage:', {
+                    analysisResults,
+                    commentsCount: currentComments.length,
+                    markdownLength: currentMarkdown.length
+                });
+            } catch (error) {
+                console.error('Error saving analysis results:', error);
+            }
+        }
 
         // 文字数カウント
         const articleInput = document.getElementById('articleInput');
@@ -368,6 +461,9 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
                 // 結果を表示
                 displayArticleWithComments(content);
                 generateComments();
+                
+                // 分析結果をローカルストレージに保存
+                saveAnalysisResults();
                 
                 updateLoadingProgress(100, '完了！');
                 
@@ -472,6 +568,7 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
         // 記事内容をハイライト付きで表示
         function displayArticleWithComments(content) {
             originalContent = content;
+            currentMarkdown = content;
             const articleContent = document.getElementById('articleContent');
             const editTextarea = document.getElementById('editTextarea');
             
@@ -506,37 +603,7 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
             currentComments = [];
             const { strength, why, sixTwo } = analysisResults;
 
-            // 強み分析からのコメント
-            if (strength.missing_elements) {
-                strength.missing_elements.forEach((element, index) => {
-                    currentComments.push({
-                        id: `strength_${index}`,
-                        type: 'strength',
-                        title: `${element.element}要素の追加`,
-                        content: element.suggestion,
-                        severity: 'medium',
-                        category: '強み分析',
-                        position: index * 100 + 50 // 仮の位置
-                    });
-                });
-            }
-
-            // なぜなぜ分析からのコメント  
-            if (why.pr_recommendations) {
-                why.pr_recommendations.forEach((rec, index) => {
-                    currentComments.push({
-                        id: `why_${index}`,
-                        type: 'why',
-                        title: 'PR活用のポイント',
-                        content: rec,
-                        severity: 'high',
-                        category: 'なぜなぜ分析',
-                        position: index * 120 + 80
-                    });
-                });
-            }
-
-            // 記事活用例からのコメント
+            // 右側コメント：特定部分への指摘のみ（記事改善カテゴリー）
             if (why.article_applications) {
                 why.article_applications.forEach((app, index) => {
                     if (app.after_example || app.suggestion) {
@@ -555,22 +622,206 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
                 });
             }
 
-            // 6W2H分析からのコメント
-            if (sixTwo.review) {
-                currentComments.push({
-                    id: 'sixtwo_main',
-                    type: 'sixtwo',
-                    title: '6W2H構成チェック',
-                    content: sixTwo.review,
-                    severity: 'low',
-                    category: '6W2H分析',
-                    position: 200
-                });
-            }
-
             displayComments();
             addHighlights();
             updateCommentCount();
+            
+            // 全体分析結果を下部セクションに表示
+            displayOverallAnalysis(strength, sixTwo);
+        }
+
+        // 全体分析結果を表示する関数
+        function displayOverallAnalysis(strength, sixTwo) {
+            // デバッグ用ログ
+            console.log('Strength data:', strength);
+            console.log('SixTwo data:', sixTwo);
+            
+            // 強み分析結果を表示
+            displayStrengthAnalysis(strength);
+            
+            // 6W2H分析結果を表示
+            displaySixTwoAnalysis(sixTwo);
+            
+            // ペルソナフィードバックを表示（なぜなぜ分析の前に配置）
+            displayPersonaFeedback(strength);
+            
+            // 全体分析結果セクションを表示
+            document.getElementById('analysisResultsSection').classList.remove('hidden');
+        }
+
+        // 強み分析結果を表示
+        function displayStrengthAnalysis(strength) {
+            const container = document.getElementById('strengthAnalysisResult');
+            let html = '';
+            
+            if (strength.missing_elements && strength.missing_elements.length > 0) {
+                html += '<div class="mb-4"><h4 class="font-semibold text-blue-700 mb-2">不足している要素:</h4><ul class="space-y-2">';
+                strength.missing_elements.forEach(element => {
+                    const elementName = typeof element === 'object' ? element.element : element;
+                    const suggestion = typeof element === 'object' ? element.suggestion : '';
+                    html += `
+                        <li class="bg-white rounded-lg p-3 border-l-4 border-blue-400">
+                            <div class="font-medium text-blue-800">${elementName}</div>
+                            ${suggestion ? `<div class="text-sm text-gray-600 mt-1">${suggestion}</div>` : ''}
+                        </li>
+                    `;
+                });
+                html += '</ul></div>';
+            }
+            
+            if (strength.strengths && strength.strengths.length > 0) {
+                html += '<div class="mb-4"><h4 class="font-semibold text-blue-700 mb-2">既存の強み:</h4><div class="space-y-3">';
+                strength.strengths.forEach(strengthItem => {
+                    if (typeof strengthItem === 'object') {
+                        // オブジェクトの場合は詳細情報を綺麗に表示
+                        const content = strengthItem.content || strengthItem.name || strengthItem.element || '';
+                        const category = strengthItem.category || '';
+                        const impact = strengthItem.impact_score || '';
+                        const position = strengthItem.position || '';
+                        
+                        // インパクトスコアに応じて色を決定
+                        let impactColors = {
+                            badge: 'bg-gray-100 text-gray-700',
+                            border: 'border-gray-400',
+                            text: 'text-gray-800'
+                        };
+                        
+                        if (impact === '高' || impact === 'high') {
+                            impactColors = {
+                                badge: 'bg-red-100 text-red-700',
+                                border: 'border-red-400',
+                                text: 'text-red-800'
+                            };
+                        } else if (impact === '中' || impact === 'medium') {
+                            impactColors = {
+                                badge: 'bg-yellow-100 text-yellow-700',
+                                border: 'border-yellow-400',
+                                text: 'text-yellow-800'
+                            };
+                        } else if (impact === '低' || impact === 'low') {
+                            impactColors = {
+                                badge: 'bg-green-100 text-green-700',
+                                border: 'border-green-400',
+                                text: 'text-green-800'
+                            };
+                        }
+                        
+                        html += `
+                            <div class="bg-white rounded-lg p-3 border-l-4 ${impactColors.border} shadow-sm">
+                                <div class="flex items-start justify-between mb-1">
+                                    <span class="text-sm font-medium ${impactColors.text}">✓ ${content}</span>
+                                    ${impact ? `<span class="text-xs px-2 py-1 ${impactColors.badge} rounded-full font-medium">${impact}</span>` : ''}
+                                </div>
+                                ${category ? `<div class="text-xs text-blue-600 font-medium mb-1">カテゴリ: ${category}</div>` : ''}
+                                ${position ? `<div class="text-xs text-gray-500">位置: ${position}</div>` : ''}
+                            </div>
+                        `;
+                    } else {
+                        // 文字列の場合はシンプル表示
+                        html += `<div class="text-sm text-green-600 bg-green-50 rounded p-2">✓ ${strengthItem}</div>`;
+                    }
+                });
+                html += '</div></div>';
+            }
+            
+            
+            container.innerHTML = html || '<p class="text-gray-500">分析データが不足しています</p>';
+        }
+
+        // ペルソナフィードバックを表示
+        function displayPersonaFeedback(strength) {
+            // 既存のペルソナフィードバックセクションを削除
+            const existingSection = document.getElementById('personaFeedbackSection');
+            if (existingSection) {
+                existingSection.remove();
+            }
+
+            if (strength && strength.persona_feedback && strength.persona_feedback.trim()) {
+                const analysisSection = document.getElementById('analysisResultsSection');
+                
+                // ペルソナフィードバックセクションを作成
+                const personaSection = document.createElement('div');
+                personaSection.id = 'personaFeedbackSection';
+                personaSection.className = 'mt-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6';
+                
+                personaSection.innerHTML = `
+                    <h3 class="text-xl font-semibold text-purple-800 mb-4 flex items-center">
+                        <span class="w-6 h-6 bg-purple-200 rounded-full flex items-center justify-center text-purple-700 mr-2">👤</span>
+                        読者の視点
+                    </h3>
+                    <div class="bg-white rounded-lg p-4 border-l-4 border-purple-400">
+                        <div class="text-gray-700 leading-relaxed text-lg italic">
+                            "${strength.persona_feedback}"
+                        </div>
+                        <div class="text-sm text-purple-600 mt-3 font-medium">
+                            ※ ターゲットペルソナの視点からのフィードバック
+                        </div>
+                    </div>
+                `;
+
+                // なぜなぜ分析セクションの前に挿入
+                const whySection = document.getElementById('whyAnalysisResultsSection');
+                if (whySection) {
+                    analysisSection.insertBefore(personaSection, whySection);
+                } else {
+                    // なぜなぜ分析セクションがない場合は最後に追加
+                    analysisSection.appendChild(personaSection);
+                }
+                
+                console.log('Persona feedback displayed');
+            }
+        }
+
+        // 6W2H分析結果を表示
+        function displaySixTwoAnalysis(sixTwo) {
+            const container = document.getElementById('sixTwoAnalysisResult');
+            
+            if (sixTwo.review) {
+                // Markdown風のレビューテキストをHTMLに変換
+                const reviewHtml = sixTwo.review
+                    .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+                    .replace(/✅/g, '<span class="text-green-600">✅</span>')
+                    .replace(/❌/g, '<span class="text-red-600">❌</span>')
+                    .replace(/⚠️/g, '<span class="text-yellow-600">⚠️</span>')
+                    .replace(/💡/g, '<span class="text-blue-600">💡</span>')
+                    .replace(/⭐/g, '<span class="text-yellow-500">⭐</span>')
+                    .replace(/\n\n/g, '</p><p class="mb-3">')
+                    .replace(/\n/g, '<br>');
+                
+                container.innerHTML = `<div class="prose prose-sm max-w-none"><p class="mb-3">${reviewHtml}</p></div>`;
+            } else {
+                container.innerHTML = '<p class="text-gray-500">分析データが不足しています</p>';
+            }
+        }
+
+        // なぜなぜ分析を開始（別ページに遷移）
+        function startWhyAnalysis() {
+            const currentText = document.getElementById('editTextarea').value || currentMarkdown;
+            
+            if (!currentText.trim()) {
+                showToast('分析する記事がありません', 'error');
+                return;
+            }
+
+            // ローカルストレージに現在の記事内容と分析結果を保存
+            localStorage.setItem('whyAnalysisArticle', currentText);
+            localStorage.setItem('whyAnalysisFrom', 'comment-review');
+            
+            // 現在の分析結果も保存（戻ってきた時に復元するため）
+            if (analysisResults) {
+                localStorage.setItem('commentReviewAnalysisResults', JSON.stringify(analysisResults));
+            }
+            
+            // 現在のコメントも保存
+            if (currentComments && currentComments.length > 0) {
+                localStorage.setItem('commentReviewComments', JSON.stringify(currentComments));
+            }
+            
+            // 現在のMarkdownも保存
+            localStorage.setItem('commentReviewMarkdown', currentMarkdown || currentText);
+            
+            // なぜなぜ分析ページに遷移
+            window.location.href = '/why-analyzer';
         }
 
         // コメントの表示
@@ -695,7 +946,7 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
 
             // 編集モードに切り替え
             if (!isEditMode) {
-                toggleEditMode();
+                switchToEditMode();
             }
 
             // テキストエリアに改善提案を追加
@@ -716,24 +967,54 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
             showToast('改善提案を編集エリアに追加しました', 'success');
         }
 
-        // 編集モードの切り替え
-        function toggleEditMode() {
-            const editModeBtn = document.getElementById('editModeBtn');
+        // プレビューモードに切り替え
+        function switchToPreviewMode() {
+            const previewTab = document.getElementById('previewTab');
+            const editTab = document.getElementById('editTab');
             const articleContent = document.getElementById('articleContent');
             const editMode = document.getElementById('editMode');
             
-            isEditMode = !isEditMode;
+            isEditMode = false;
             
+            // タブの外観を更新
+            previewTab.className = 'px-4 py-3 text-sm font-medium text-blue-600 border-b-2 border-blue-600 bg-white transition-colors';
+            editTab.className = 'px-4 py-3 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 transition-colors';
+            
+            // コンテンツの表示を切り替え
+            articleContent.classList.remove('hidden');
+            editMode.classList.add('hidden');
+            
+            // プレビューを更新
+            previewChanges();
+        }
+
+        // 編集モードに切り替え
+        function switchToEditMode() {
+            const previewTab = document.getElementById('previewTab');
+            const editTab = document.getElementById('editTab');
+            const articleContent = document.getElementById('articleContent');
+            const editMode = document.getElementById('editMode');
+            
+            isEditMode = true;
+            
+            // タブの外観を更新
+            editTab.className = 'px-4 py-3 text-sm font-medium text-blue-600 border-b-2 border-blue-600 bg-white transition-colors';
+            previewTab.className = 'px-4 py-3 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 transition-colors';
+            
+            // コンテンツの表示を切り替え
+            articleContent.classList.add('hidden');
+            editMode.classList.remove('hidden');
+            
+            // テキストエリアにフォーカス
+            document.getElementById('editTextarea').focus();
+        }
+
+        // 後方互換性のための関数（既存のコードで使用されている場合）
+        function toggleEditMode() {
             if (isEditMode) {
-                editModeBtn.textContent = 'プレビュー';
-                editModeBtn.className = 'px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full hover:bg-green-200 transition-colors';
-                articleContent.classList.add('hidden');
-                editMode.classList.remove('hidden');
+                switchToPreviewMode();
             } else {
-                editModeBtn.textContent = '編集モード';
-                editModeBtn.className = 'px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full hover:bg-blue-200 transition-colors';
-                articleContent.classList.remove('hidden');
-                editMode.classList.add('hidden');
+                switchToEditMode();
             }
         }
 
@@ -753,6 +1034,9 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
             const textarea = document.getElementById('editTextarea');
             originalContent = textarea.value;
             analysisResults.content = originalContent;
+            
+            // ローカルストレージに保存
+            saveAnalysisResults();
             
             previewChanges();
             showToast('変更を保存しました', 'success');
@@ -791,6 +1075,10 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
                 };
                 
                 generateComments();
+                
+                // 再分析結果をローカルストレージに保存
+                saveAnalysisResults();
+                
                 updateLoadingProgress(100, '完了！');
                 
                 setTimeout(() => {
@@ -897,6 +1185,334 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
             a.click();
             URL.revokeObjectURL(url);
         }
+
+        // ローカルストレージを全てクリアする
+        function clearAllLocalStorage() {
+            if (confirm('全てのローカルストレージデータを削除しますか？\n\n削除されるデータ:\n- 分析結果\n- コメントデータ\n- なぜなぜ分析結果\n- その他の保存データ\n\nこの操作は取り消せません。')) {
+                try {
+                    // ローカルストレージの内容をコンソールに出力（デバッグ用）
+                    console.log('Clearing localStorage. Current contents:');
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        console.log(`${key}:`, localStorage.getItem(key));
+                    }
+                    
+                    // 全データをクリア
+                    localStorage.clear();
+                    
+                    console.log('LocalStorage cleared successfully');
+                    showToast('ローカルストレージのデータを全て削除しました', 'success');
+                    
+                    // ページをリロードして状態をリセット
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                    
+                } catch (error) {
+                    console.error('Error clearing localStorage:', error);
+                    showToast('データクリア中にエラーが発生しました', 'error');
+                }
+            }
+        }
+
+        // モーダル外クリックで閉じる
+        document.getElementById('newArticleModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideNewArticleModal();
+            }
+        });
+
+        // なぜなぜ分析から戻ってきた場合の復元処理
+        function restoreFromWhyAnalysis() {
+            // なぜなぜ分析から戻ってきた場合かチェック
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromWhy = urlParams.get('from') === 'why-analysis';
+            
+            if (fromWhy || localStorage.getItem('commentReviewAnalysisResults')) {
+                try {
+                    // 保存された分析結果を復元
+                    const savedResults = localStorage.getItem('commentReviewAnalysisResults');
+                    const savedComments = localStorage.getItem('commentReviewComments');
+                    const savedMarkdown = localStorage.getItem('commentReviewMarkdown');
+                    
+                    if (savedResults) {
+                        analysisResults = JSON.parse(savedResults);
+                        
+                        if (savedComments) {
+                            currentComments = JSON.parse(savedComments);
+                        }
+                        
+                        if (savedMarkdown) {
+                            currentMarkdown = savedMarkdown;
+                            originalContent = savedMarkdown;
+                            
+                            // テキストエリアに復元
+                            const textarea = document.getElementById('editTextarea');
+                            if (textarea) {
+                                textarea.value = savedMarkdown;
+                                updateEditCharCount();
+                            }
+                        }
+                        
+                        // UIを復元
+                        showReviewContainer();
+                        displayArticleWithComments(currentMarkdown);
+                        displayComments();
+                        displayOverallAnalysis(analysisResults.strength, analysisResults.sixTwo);
+                        updateCommentCount();
+                        
+                        // なぜなぜ分析で新しい結果があるかチェック
+                        const whyResults = localStorage.getItem('whyAnalysisResults');
+                        console.log('Raw whyResults from localStorage:', whyResults);
+                        if (whyResults) {
+                            try {
+                                const whyData = JSON.parse(whyResults);
+                                console.log('Parsed whyData:', whyData);
+                                
+                                // 最終洞察が完了している場合のみ更新（古いデータで上書きしない）
+                                if (whyData.analysis_complete && whyData.insights && whyData.insights.trim()) {
+                                    console.log('Complete why analysis found - updating results');
+                                    analysisResults.why = whyData;
+                                    
+                                    // なぜなぜ分析の結果をUI下部に表示
+                                    displayWhyAnalysisResults(whyData);
+                                    
+                                    // 更新された分析結果をローカルストレージに保存
+                                    saveAnalysisResults();
+                                    
+                                    // 使用済みデータをクリア
+                                    localStorage.removeItem('whyAnalysisResults');
+                                    console.log('Complete why analysis results displayed and localStorage cleared');
+                                } else {
+                                    console.log('Incomplete why analysis found - keeping existing data');
+                                    // 進行中のデータをUI下部に表示（上書きはしない）
+                                    displayWhyAnalysisResults(whyData);
+                                }
+                            } catch (e) {
+                                console.error('Error parsing why analysis results:', e);
+                            }
+                        } else {
+                            console.log('No whyAnalysisResults found in localStorage');
+                            
+                            // デバッグ: ローカルストレージの全内容を表示
+                            console.log('All localStorage items:');
+                            for (let i = 0; i < localStorage.length; i++) {
+                                const key = localStorage.key(i);
+                                console.log(key + ': ', localStorage.getItem(key));
+                            }
+                        }
+                        
+                        showToast('なぜなぜ分析から戻りました', 'success');
+                        
+                        // URLパラメータをクリア
+                        if (fromWhy) {
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error restoring from why analysis:', error);
+                    showToast('復元中にエラーが発生しました', 'error');
+                }
+            }
+        }
+
+        // なぜなぜ分析結果の表示
+        function displayWhyAnalysisResults(whyData) {
+            console.log('displayWhyAnalysisResults called with:', whyData);
+            
+            const existingSection = document.getElementById('whyAnalysisResultsSection');
+            if (existingSection) {
+                existingSection.remove();
+                console.log('Removed existing why analysis section');
+            }
+            
+            const analysisSection = document.getElementById('analysisResultsSection');
+            console.log('Analysis section found:', !!analysisSection);
+            
+            if (analysisSection && whyData) {
+                const whySection = document.createElement('div');
+                whySection.id = 'whyAnalysisResultsSection';
+                whySection.className = 'mt-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6';
+                
+                let whyHtml = `
+                    <h3 class="text-xl font-semibold text-purple-800 mb-4 flex items-center">
+                        <span class="w-6 h-6 bg-purple-200 rounded-full flex items-center justify-center text-purple-700 mr-2">🤔</span>
+                        なぜなぜ分析結果
+                    </h3>
+                `;
+                
+                // 最終洞察の全データを構造化して表示
+                if (whyData.insights && whyData.insights.trim()) {
+                    whyHtml += `<div class="bg-white rounded-lg p-4 mb-4">
+                        <h4 class="font-semibold text-purple-700 mb-2 flex items-center">
+                            <span class="mr-2">🎯</span>最終洞察とストーリー
+                        </h4>
+                        <div class="prose max-w-none text-gray-700 leading-relaxed whitespace-pre-line">${whyData.insights}</div>
+                    </div>`;
+                    
+                } else if (whyData.chat_history && whyData.chat_history.length > 0) {
+                    // 洞察がまだ生成されていない場合のメッセージ
+                    whyHtml += `<div class="bg-white rounded-lg p-4 mb-4">
+                        <h4 class="font-semibold text-purple-700 mb-2 flex items-center">
+                            <span class="mr-2">💡</span>洞察・気づき
+                        </h4>
+                        <div class="p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-300">
+                            <p class="text-gray-700">なぜなぜ分析は開始されましたが、最終的な洞察はまだ生成されていません。</p>
+                            <p class="text-sm text-gray-600 mt-1">分析を続行して「最終洞察を生成」ボタンを押すと、ここに詳細な洞察が表示されます。</p>
+                        </div>
+                    </div>`;
+                }
+                
+                
+                // チャット履歴の要約表示
+                if (whyData.chat_history && whyData.chat_history.length > 0) {
+                    whyHtml += `<div class="bg-white rounded-lg p-4">
+                        <h4 class="font-semibold text-purple-700 mb-2 flex items-center">
+                            <span class="mr-2">💬</span>分析対話履歴
+                            <button onclick="toggleChatHistory()" class="ml-2 text-xs px-2 py-1 bg-purple-100 text-purple-600 rounded hover:bg-purple-200" id="chatToggleBtn">
+                                表示
+                            </button>
+                        </h4>
+                        <div id="chatHistoryContent" class="hidden mt-3 max-h-64 overflow-y-auto space-y-2">`;
+                    whyData.chat_history.forEach((message, index) => {
+                        const isBot = message.role === 'assistant';
+                        whyHtml += `<div class="p-2 rounded ${isBot ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}">
+                            <div class="text-xs font-medium mb-1">${isBot ? 'Bot' : 'You'}</div>
+                            <div class="text-sm">${message.content}</div>
+                        </div>`;
+                    });
+                    whyHtml += `</div></div>`;
+                }
+                
+                whySection.innerHTML = whyHtml;
+                console.log('Generated whyHtml length:', whyHtml.length);
+                console.log('whySection.innerHTML set successfully');
+                
+                analysisSection.appendChild(whySection);
+                console.log('whySection appended to analysisSection');
+                console.log('Final whySection HTML:', whySection.outerHTML.substring(0, 500) + '...');
+                
+                // DOM確認のデバッグ
+                setTimeout(() => {
+                    const domCheck = document.getElementById('whyAnalysisResultsSection');
+                    console.log('DOM check - whyAnalysisResultsSection exists:', !!domCheck);
+                    if (domCheck) {
+                        console.log('Element is visible:', domCheck.offsetWidth > 0 && domCheck.offsetHeight > 0);
+                        console.log('Element position:', domCheck.getBoundingClientRect());
+                        console.log('Element styles:', getComputedStyle(domCheck).display, getComputedStyle(domCheck).visibility);
+                        console.log('Parent element:', domCheck.parentElement?.id);
+                        console.log('Children count:', domCheck.children.length);
+                    }
+                    
+                    // 記事活用方法の要素も確認
+                    const methodElements = document.querySelectorAll('[class*="bg-purple-50"]');
+                    console.log('Method elements found:', methodElements.length);
+                    methodElements.forEach((el, i) => {
+                        console.log(`Method element ${i}:`, el.textContent?.substring(0, 50));
+                    });
+                }, 100);
+            }
+        }
+
+        // チャット履歴から記事活用方法を抽出
+        function extractArticleApplications(chatHistory) {
+            console.log('Extracting applications from chat history:', chatHistory);
+            const applications = [];
+            
+            chatHistory.forEach((message, index) => {
+                // なぜなぜ分析では message.type === 'bot_question' または message.role === 'assistant'
+                const isBot = (message.role === 'assistant') || (message.type === 'bot_question');
+                const content = message.content;
+                
+                if (isBot && content) {
+                    console.log(`Processing bot message ${index}:`, content);
+                    
+                    // より幅広いキーワードで検索
+                    const keywords = ['活用', '応用', '展開', '効果的', '使える', '有効', '取り組み', '施策', '戦略', 'PR', 'プレスリリース', '記事', '情報発信', 'ハッカソン', '採用', '人材', '企業', '方法', '理由', 'ため'];
+                    const hasKeyword = keywords.some(keyword => content.includes(keyword));
+                    
+                    console.log(`Message has keyword: ${hasKeyword}`);
+                    
+                    if (hasKeyword || content.length > 20) { // さらに緩い条件
+                        // ボットメッセージを直接活用方法として使用（テスト用）
+                        if (content.length > 20) {
+                            applications.push({
+                                title: content.length > 50 ? content.substring(0, 50) + '...' : content,
+                                content: content,
+                                source: 'direct_bot_message'
+                            });
+                        }
+                        
+                        // 文章を様々な区切り文字で分割
+                        const sentences = content.split(/[。！？\n・]/).filter(s => s.trim().length > 5);
+                        console.log('Found sentences:', sentences);
+                        
+                        sentences.forEach(sentence => {
+                            const trimmed = sentence.trim();
+                            if (trimmed.length > 10) {
+                                // より緩い条件で活用方法を抽出
+                                const isApplication = keywords.some(keyword => trimmed.includes(keyword)) ||
+                                                    trimmed.includes('こと') ||
+                                                    trimmed.includes('方法') ||
+                                                    trimmed.includes('手法') ||
+                                                    trimmed.includes('アプローチ') ||
+                                                    trimmed.includes('ため') ||
+                                                    trimmed.includes('から') ||
+                                                    trimmed.includes('によって') ||
+                                                    trimmed.includes('？') ||
+                                                    trimmed.includes('です');
+                                
+                                if (isApplication) {
+                                    applications.push({
+                                        title: trimmed.length > 40 ? trimmed.substring(0, 40) + '...' : trimmed,
+                                        content: trimmed,
+                                        source: 'sentence_extraction'
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+            
+            console.log('Extracted applications (before filtering):', applications);
+            console.log('Total applications before filtering:', applications.length);
+            
+            // 重複を除去
+            const uniqueApplications = applications.filter((app, index, self) => 
+                index === self.findIndex(a => a.content === app.content)
+            );
+            console.log('After deduplication:', uniqueApplications.length);
+            
+            // 短すぎるものを除外し、最大5件まで（デバッグ用に緩い条件）
+            const filteredApplications = uniqueApplications.filter(app => app.content.length > 5);
+            console.log('After length filtering (>15 chars):', filteredApplications.length);
+            
+            const finalApplications = filteredApplications.slice(0, 5);
+            console.log('Final applications (max 5):', finalApplications.length);
+            console.log('Returning applications:', finalApplications);
+            
+            return finalApplications;
+        }
+
+        // チャット履歴の表示切り替え
+        function toggleChatHistory() {
+            const content = document.getElementById('chatHistoryContent');
+            const btn = document.getElementById('chatToggleBtn');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                btn.textContent = '隠す';
+            } else {
+                content.classList.add('hidden');
+                btn.textContent = '表示';
+            }
+        }
+
+        // ページ読み込み時に復元処理を実行
+        document.addEventListener('DOMContentLoaded', function() {
+            restoreFromWhyAnalysis();
+        });
 
         // モーダル外クリックで閉じる
         document.getElementById('newArticleModal').addEventListener('click', function(e) {

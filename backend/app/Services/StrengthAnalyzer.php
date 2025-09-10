@@ -154,7 +154,7 @@ class StrengthAnalyzer
             . "  \"missing_elements\": [\n    {\n      \"element\": \"不足要素名\",\n      \"suggestion\": \"具体的な改善提案（リリースタイプに応じた提案を含める）\"\n    }\n  ],\n"
             . "  \"highlights\": [\n    {\n      \"content\": \"特に優れた強み\",\n      \"reason\": \"優れている理由（リリースタイプの観点も含める）\"\n    }\n  ],\n"
             . "  \"summary\": {\n    \"total_strengths\": 抽出した強みの総数,\n    \"high_impact_count\": 高インパクトの強みの数,\n    \"covered_elements\": [\"カバーしている要素のリスト\"],\n    \"release_type\": \"指定されたリリースタイプ（なければnull）\",\n    \"reference_url\": \"https://prtimes.jp/magazine/media-hook/\"\n  },\n"
-            . "  \"persona_feedback\": \"全体的な印象（1文）、疑問点や気になる点があれば（1～2文、なければ空文字）、人物像のユーザーが感じた良い点や共感ポイント（1～2文）\"\n"
+            . "  \"persona_feedback\": \"全体的な印象（1文）、疑問点や気になる点があれば（1～2文、なければ空文字）、人物像のユーザーが感じた良い点や共感ポイント（2～3文）\"\n"
             . "}\n```
 ";
     }
