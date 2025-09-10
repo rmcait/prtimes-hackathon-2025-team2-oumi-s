@@ -24,7 +24,7 @@ class Proofreading
             ->post('https://api.openai.com/v1/chat/completions', [
                 'model' => 'gpt-4o-mini', // 割と安いはず
                 'messages' => [
-                    ['role' => 'system', 'content' => 'あなたは文章校正者です。誤字脱字や不自然な表現を直し、自然でわかりやすい文にしてください。'],
+                    ['role' => 'system', 'content' => 'あなたは文章校正者です。第三者を差別、誹謗中傷しない内容であることと、法令や公序良俗を遵守した取り組みであることを指摘した上で、誤字脱字や不自然な表現を直し、自然でわかりやすい文にしてください。'],
                     ['role' => 'user', 'content' => $text],
                 ],
             ]);
