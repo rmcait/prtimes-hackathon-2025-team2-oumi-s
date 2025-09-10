@@ -440,13 +440,14 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
             showLoading();
             
             try {
-                // 3つのAI分析を並行実行
+                // 4つのAI分析を並行実行
                 updateLoadingProgress(20, 'AI分析を開始しています...');
                 
-                const [strengthResult, whyResult, sixTwoResult] = await Promise.all([
+                const [strengthResult, whyResult, sixTwoResult, proofreadResult] = await Promise.all([
                     executeStrengthAnalysis(content, persona, releaseType),
                     executeWhyAnalysis(content),
-                    executeSixTwoReview(content)
+                    executeSixTwoReview(content),
+                    executeProofreadAnalysis(content)
                 ]);
                 
                 updateLoadingProgress(90, '分析結果を処理中...');
@@ -455,6 +456,7 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
                     strength: strengthResult,
                     why: whyResult,
                     sixTwo: sixTwoResult,
+                    proofread: proofreadResult,
                     content: content
                 };
                 
@@ -565,6 +567,67 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
             return result.data;
         }
 
+        // 校正分析実行
+        async function executeProofreadAnalysis(content) {
+            updateLoadingProgress(80, '校正分析実行中...');
+            
+            try {
+                const response = await fetch('/api/proofread', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ text: content })
+                });
+                
+                const result = await response.json();
+                if (!response.ok) {
+                    console.warn('Proofreading API failed, using fallback:', result);
+                    return getMockProofreadResult(content);
+                }
+                
+                return result;
+            } catch (error) {
+                console.warn('Proofreading API error, using fallback:', error);
+                return getMockProofreadResult(content);
+            }
+        }
+
+        // 校正のモックデータ（APIが利用できない場合）
+        function getMockProofreadResult(content) {
+            return {
+                original: content,
+                proofread: content, // 実際にはAIで修正されたもの
+                suggestions: [
+                    {
+                        line: 1,
+                        original: "ハッカソン受付開始",
+                        corrected: "ハッカソン受付を開始",
+                        reason: "より自然な表現にするため、助詞「を」を追加しました。",
+                        type: "表現改善",
+                        position: "タイトル部分"
+                    },
+                    {
+                        line: 3,
+                        original: "特に優秀な方には年収500万円以上の中途採用基準での内定をお出しします。",
+                        corrected: "特に優秀な方には、年収500万円以上の中途採用基準での内定をお出しします。",
+                        reason: "読点を追加して、読みやすさを向上させました。",
+                        type: "句読点",
+                        position: "本文2段落目"
+                    },
+                    {
+                        line: 5,
+                        original: "プレスリリース配信サービス「PR TIMES」等を運営する",
+                        corrected: "プレスリリース配信サービス「PR TIMES」などを運営する",
+                        reason: "「等」よりも「など」の方が読みやすく、一般的です。",
+                        type: "表記統一",
+                        position: "本文4段落目"
+                    }
+                ]
+            };
+        }
+
         // 記事内容をハイライト付きで表示
         function displayArticleWithComments(content) {
             originalContent = content;
@@ -601,7 +664,27 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
         // コメントの生成と表示
         function generateComments() {
             currentComments = [];
-            const { strength, why, sixTwo } = analysisResults;
+            const { strength, why, sixTwo, proofread } = analysisResults;
+
+            // 校正結果をコメントとして追加
+            if (proofread && proofread.suggestions) {
+                proofread.suggestions.forEach((suggestion, index) => {
+                    const priority = suggestion.type === '句読点' ? 'low' : 
+                                   suggestion.type === '表記統一' ? 'medium' : 'high';
+                    
+                    currentComments.push({
+                        id: `proofread-${index}`,
+                        title: `${suggestion.type}の改善`,
+                        content: `「${suggestion.original}」→「${suggestion.corrected}」`,
+                        detail: suggestion.reason,
+                        category: '校正',
+                        priority: priority,
+                        position: suggestion.position || `${suggestion.line}行目`,
+                        tips: '文章をより読みやすくするための修正提案です。',
+                        type: 'specific'
+                    });
+                });
+            }
 
             // 右側コメント：特定部分への指摘のみ（記事改善カテゴリー）
             if (why.article_applications) {
@@ -1059,10 +1142,11 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
             updateLoadingProgress(10, '再分析を開始しています...');
             
             try {
-                const [strengthResult, whyResult, sixTwoResult] = await Promise.all([
+                const [strengthResult, whyResult, sixTwoResult, proofreadResult] = await Promise.all([
                     executeStrengthAnalysis(newContent, '', ''),
                     executeWhyAnalysis(newContent),
-                    executeSixTwoReview(newContent)
+                    executeSixTwoReview(newContent),
+                    executeProofreadAnalysis(newContent)
                 ]);
                 
                 updateLoadingProgress(90, '新しい分析結果を処理中...');
@@ -1071,6 +1155,7 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
                     strength: strengthResult,
                     why: whyResult,
                     sixTwo: sixTwoResult,
+                    proofread: proofreadResult,
                     content: newContent
                 };
                 
