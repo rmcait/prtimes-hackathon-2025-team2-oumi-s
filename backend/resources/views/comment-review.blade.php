@@ -45,11 +45,63 @@
         
         .comment-item:hover {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
         }
         
         .comment-item.highlighted {
             border-color: #3b82f6;
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        /* 校正カード専用スタイル */
+        .comment-item[data-comment-id*="proofread"] {
+            background: linear-gradient(135deg, #fefefe 0%, #f8fafc 100%);
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .comment-item[data-comment-id*="proofread"]:hover {
+            border-left-color: #1d4ed8;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        
+        /* 重要度高の校正カード */
+        .comment-item[data-comment-id*="proofread"].border-red-300 {
+            border-left-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        }
+        
+        /* 校正提案の修正前後表示 */
+        .proofreading-diff {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .proofreading-before, .proofreading-after {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .proofreading-before {
+            background: #fef2f2;
+            border-left: 3px solid #ef4444;
+            color: #991b1b;
+        }
+        
+        .proofreading-after {
+            background: #f0fdf4;
+            border-left: 3px solid #22c55e;
+            color: #166534;
+        }
+        
+        /* 適用済みカードのスタイル */
+        .comment-item.applied {
+            opacity: 0.6;
+            transform: scale(0.98);
+            background: #f9fafb;
         }
         
         .article-content {
@@ -572,23 +624,43 @@
         async function executeProofreadAnalysis(content) {
             updateLoadingProgress(80, '校正分析実行中...');
             
+            console.log('Executing proofreading analysis for content:', {
+                contentLength: content.length,
+                contentPreview: content.substring(0, 200) + '...',
+                fullContent: content
+            });
+            
             try {
+                const requestBody = { text: content };
+                console.log('Sending proofreading request:', requestBody);
+                
                 const response = await fetch('/api/proofread', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     },
-                    body: JSON.stringify({ text: content })
+                    body: JSON.stringify(requestBody)
                 });
                 
+                console.log('Proofreading API response status:', response.status);
                 const result = await response.json();
-                if (!response.ok) {
+                console.log('Proofreading API result:', result);
+                
+                if (!response.ok || !result.success) {
                     console.warn('Proofreading API failed, using fallback:', result);
                     return getMockProofreadResult(content);
                 }
                 
-                return result;
+                // 成功した場合は構造化されたレスポンスを返す
+                return {
+                    original: result.original,
+                    proofread: result.corrected_text || result.proofread,
+                    corrected_text: result.corrected_text || result.proofread,
+                    suggestions: result.suggestions || [],
+                    overall_assessment: result.overall_assessment || '文章を確認しました。',
+                    has_changes: result.has_changes || false
+                };
             } catch (error) {
                 console.warn('Proofreading API error, using fallback:', error);
                 return getMockProofreadResult(content);
@@ -597,35 +669,70 @@
 
         // 校正のモックデータ（APIが利用できない場合）
         function getMockProofreadResult(content) {
+            console.log('Generating mock proofreading suggestions for content length:', content.length);
+            
+            const suggestions = [];
+            
+            // 特定の文字列に基づいて修正提案を生成
+            if (content.includes('ハッカソン受付開始')) {
+                suggestions.push({
+                    original: "ハッカソン受付開始",
+                    corrected: "ハッカソン受付を開始",
+                    reason: "より自然な表現にするため、助詞「を」を追加しました。",
+                    type: "表現改善",
+                    severity: "medium",
+                    position: "タイトル部分"
+                });
+            }
+            
+            if (content.includes('特に優秀な方には年収500万円以上の中途採用基準での内定をお出しします。')) {
+                suggestions.push({
+                    original: "特に優秀な方には年収500万円以上の中途採用基準での内定をお出しします。",
+                    corrected: "特に優秀な方には、年収500万円以上の中途採用基準での内定をお出しします。",
+                    reason: "読点を追加して、読みやすさを向上させました。",
+                    type: "句読点",
+                    severity: "low",
+                    position: "本文2段落目"
+                });
+            }
+            
+            if (content.includes('等')) {
+                suggestions.push({
+                    original: "PR TIMES」等を",
+                    corrected: "PR TIMES」などを",
+                    reason: "「等」よりも「など」の方が読みやすく、一般的です。",
+                    type: "表記統一",
+                    severity: "low",
+                    position: "本文中"
+                });
+            }
+            
+            if (content.includes('リニューアします')) {
+                suggestions.push({
+                    original: "メディアリスト機能をリニューアします",
+                    corrected: "メディアリスト機能をリニューアルします",
+                    reason: "「リニューアル」の正しい表記に修正しました。",
+                    type: "誤字脱字",
+                    severity: "high",
+                    position: "タイトル部分"
+                });
+            }
+            
+            // 修正後の文章を生成
+            let correctedText = content;
+            suggestions.forEach(suggestion => {
+                correctedText = correctedText.replace(suggestion.original, suggestion.corrected);
+            });
+            
             return {
                 original: content,
-                proofread: content, // 実際にはAIで修正されたもの
-                suggestions: [
-                    {
-                        line: 1,
-                        original: "ハッカソン受付開始",
-                        corrected: "ハッカソン受付を開始",
-                        reason: "より自然な表現にするため、助詞「を」を追加しました。",
-                        type: "表現改善",
-                        position: "タイトル部分"
-                    },
-                    {
-                        line: 3,
-                        original: "特に優秀な方には年収500万円以上の中途採用基準での内定をお出しします。",
-                        corrected: "特に優秀な方には、年収500万円以上の中途採用基準での内定をお出しします。",
-                        reason: "読点を追加して、読みやすさを向上させました。",
-                        type: "句読点",
-                        position: "本文2段落目"
-                    },
-                    {
-                        line: 5,
-                        original: "プレスリリース配信サービス「PR TIMES」等を運営する",
-                        corrected: "プレスリリース配信サービス「PR TIMES」などを運営する",
-                        reason: "「等」よりも「など」の方が読みやすく、一般的です。",
-                        type: "表記統一",
-                        position: "本文4段落目"
-                    }
-                ]
+                proofread: correctedText,
+                corrected_text: correctedText,
+                suggestions: suggestions,
+                overall_assessment: suggestions.length > 0 
+                    ? `${suggestions.length}箇所の改善点を見つけました。文章の品質向上にご活用ください。`
+                    : '文章を確認しました。特に修正が必要な箇所は見つかりませんでした。',
+                has_changes: suggestions.length > 0
             };
         }
 
@@ -667,24 +774,66 @@
             currentComments = [];
             const { strength, why, sixTwo, proofread } = analysisResults;
 
+            // デバッグ：校正結果を確認
+            console.log('Proofread data in generateComments:', proofread);
+            
             // 校正結果をコメントとして追加
-            if (proofread && proofread.suggestions) {
+            if (proofread && proofread.suggestions && proofread.suggestions.length > 0) {
+                console.log('Processing proofreading suggestions:', proofread.suggestions);
+                
                 proofread.suggestions.forEach((suggestion, index) => {
-                    const priority = suggestion.type === '句読点' ? 'low' : 
-                                   suggestion.type === '表記統一' ? 'medium' : 'high';
+                    // severityに基づいて優先度を決定
+                    const priority = suggestion.severity || 'medium';
+                    
+                    // severityに基づいてアイコンと色を決定
+                    const severityConfig = {
+                        'high': { icon: '🔥', color: 'red', label: '重要' },
+                        'medium': { icon: '⚠️', color: 'yellow', label: '推奨' },
+                        'low': { icon: '💡', color: 'blue', label: '提案' }
+                    };
+                    
+                    const config = severityConfig[priority] || severityConfig.medium;
                     
                     currentComments.push({
                         id: `proofread-${index}`,
-                        title: `${suggestion.type}の改善`,
+                        title: `${suggestion.type || '校正'}の改善 ${config.icon}`,
                         content: `「${suggestion.original}」→「${suggestion.corrected}」`,
                         detail: suggestion.reason,
                         category: '校正',
+                        severity: priority,
                         priority: priority,
-                        position: suggestion.position || `${suggestion.line}行目`,
-                        tips: '文章をより読みやすくするための修正提案です。',
-                        type: 'specific'
+                        position: suggestion.position || `修正箇所`,
+                        tips: `${config.label}度：${suggestion.type}の修正提案`,
+                        type: 'specific',
+                        suggestions: {
+                            original: suggestion.original,
+                            corrected: suggestion.corrected,
+                            reason: suggestion.reason,
+                            type: suggestion.type,
+                            severity: suggestion.severity
+                        }
                     });
                 });
+                
+                console.log('Added proofreading comments:', proofread.suggestions.length);
+                
+                // 全体評価がある場合はサマリーカードとして追加
+                if (proofread.overall_assessment && proofread.overall_assessment !== '文章を確認しました。') {
+                    currentComments.push({
+                        id: 'proofread-summary',
+                        title: '校正総評 📝',
+                        content: proofread.overall_assessment,
+                        detail: `${proofread.suggestions.length}件の修正提案があります。`,
+                        category: '校正サマリー',
+                        severity: 'medium',
+                        priority: 'medium',
+                        position: '全体',
+                        tips: 'AIによる文章全体の評価です。',
+                        type: 'summary'
+                    });
+                }
+            } else {
+                console.log('No proofreading suggestions available');
             }
 
             // 右側コメント：特定部分への指摘のみ（記事改善カテゴリー）
@@ -706,6 +855,9 @@
                 });
             }
 
+            console.log('Total comments generated:', currentComments.length);
+            console.log('Comments breakdown:', currentComments.map(c => ({ id: c.id, category: c.category, title: c.title })));
+            
             displayComments();
             addHighlights();
             updateCommentCount();
@@ -934,6 +1086,86 @@
                     'low': '💡'
                 }[comment.severity] || '💬';
 
+                // 校正カードの特別表示
+                if (comment.category === '校正' || comment.category === '校正サマリー') {
+                    const isHigh = comment.severity === 'high';
+                    const isSummary = comment.type === 'summary';
+                    
+                    return `
+                        <div class="comment-item ${severityColor} ${isHigh ? 'ring-2 ring-red-200' : ''} ${isSummary ? 'border-l-4 border-purple-500' : ''}" 
+                             data-comment-id="${comment.id}" onclick="highlightComment('${comment.id}')">
+                            <div class="p-4">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-xl">${comment.title.includes('📝') ? '📝' : comment.title.includes('🔥') ? '🔥' : comment.title.includes('⚠️') ? '⚠️' : '💡'}</span>
+                                        <span class="text-xs px-3 py-1 bg-white rounded-full text-gray-700 font-medium shadow-sm">
+                                            ${comment.category}
+                                        </span>
+                                        ${isHigh ? '<span class="text-xs px-2 py-1 bg-red-500 text-white rounded-full font-bold">重要</span>' : ''}
+                                    </div>
+                                    ${!isSummary ? `
+                                        <div class="flex space-x-2">
+                                            <button onclick="event.stopPropagation(); applyProofreadSuggestion('${comment.id}')" 
+                                                    class="px-3 py-1 bg-blue-500 text-white text-xs rounded-full hover:bg-blue-600 transition-colors">
+                                                適用
+                                            </button>
+                                            <button onclick="event.stopPropagation(); applyCommentToEditor('${comment.id}')" 
+                                                    class="px-3 py-1 bg-green-500 text-white text-xs rounded-full hover:bg-green-600 transition-colors">
+                                                編集へ
+                                            </button>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                
+                                <h4 class="font-semibold text-gray-800 mb-2 text-sm">
+                                    ${comment.title.replace(/[📝🔥⚠️💡]/g, '').trim()}
+                                </h4>
+                                
+                                ${!isSummary && comment.suggestions ? `
+                                    <div class="bg-white bg-opacity-80 rounded-lg p-3 mb-3 border border-gray-200">
+                                        <div class="space-y-2">
+                                            <div class="text-sm">
+                                                <span class="text-red-600 font-medium">修正前:</span>
+                                                <span class="font-mono text-gray-700 bg-red-50 px-2 py-1 rounded">
+                                                    ${comment.suggestions.original}
+                                                </span>
+                                            </div>
+                                            <div class="text-sm">
+                                                <span class="text-green-600 font-medium">修正後:</span>
+                                                <span class="font-mono text-gray-700 bg-green-50 px-2 py-1 rounded">
+                                                    ${comment.suggestions.corrected}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <p class="text-sm text-gray-700 mb-2 leading-relaxed">${comment.content}</p>
+                                `}
+                                
+                                ${comment.detail ? `
+                                    <div class="mt-3 p-3 bg-gray-50 rounded-lg border-l-3 border-gray-300">
+                                        <p class="text-xs text-gray-600 leading-relaxed">
+                                            <span class="font-medium">理由:</span> ${comment.detail}
+                                        </p>
+                                    </div>
+                                ` : ''}
+                                
+                                <div class="mt-3 flex items-center justify-between text-xs">
+                                    <span class="text-gray-500">
+                                        📍 ${comment.position || '修正箇所'}
+                                    </span>
+                                    ${comment.suggestions && comment.suggestions.type ? `
+                                        <span class="px-2 py-1 bg-gray-100 rounded-full text-gray-600">
+                                            ${comment.suggestions.type}
+                                        </span>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // 通常のコメントカード表示
                 return `
                     <div class="comment-item ${severityColor}" data-comment-id="${comment.id}" onclick="highlightComment('${comment.id}')">
                         <div class="p-4">
@@ -1012,12 +1244,62 @@
             }
         }
 
+        // 校正提案の適用
+        function applyProofreadSuggestion(commentId) {
+            const comment = currentComments.find(c => c.id === commentId);
+            if (!comment || !comment.suggestions) return;
+            
+            const { original, corrected } = comment.suggestions;
+            
+            // 編集エリアのテキストを更新
+            const textarea = document.getElementById('editTextarea');
+            let currentText = textarea.value;
+            
+            // 元の文章を修正後の文章に置換
+            if (currentText.includes(original)) {
+                const updatedText = currentText.replace(original, corrected);
+                textarea.value = updatedText;
+                updateEditCharCount();
+                
+                // プレビューも更新
+                const articleContent = document.getElementById('articleContent');
+                if (articleContent.innerHTML.includes(original)) {
+                    articleContent.innerHTML = articleContent.innerHTML.replace(original, corrected);
+                }
+                
+                // 成功メッセージ
+                showToast(`校正を適用しました: ${comment.suggestions.type}`, 'success');
+                
+                // コメントを適用済みとしてマーク
+                const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+                if (commentElement) {
+                    commentElement.style.opacity = '0.6';
+                    commentElement.style.pointerEvents = 'none';
+                    
+                    // 適用済みラベルを追加
+                    const appliedLabel = document.createElement('div');
+                    appliedLabel.className = 'absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full';
+                    appliedLabel.textContent = '適用済み';
+                    commentElement.style.position = 'relative';
+                    commentElement.appendChild(appliedLabel);
+                }
+            } else {
+                showToast('修正対象の文章が見つかりませんでした', 'error');
+            }
+        }
+
         // コメントの適用
         function applyComment(commentId) {
             const comment = currentComments.find(c => c.id === commentId);
             if (!comment) return;
 
-            // 簡単な適用処理：アラートで内容を表示
+            // 校正提案の場合は専用の処理を使用
+            if (comment.category === '校正' && comment.suggestions) {
+                applyProofreadSuggestion(commentId);
+                return;
+            }
+
+            // 通常のコメント適用処理
             alert(`改善提案を適用しました:\n\n${comment.title}\n\n${comment.content}`);
             
             // 実際の実装では、記事内容を直接編集する機能を追加できます

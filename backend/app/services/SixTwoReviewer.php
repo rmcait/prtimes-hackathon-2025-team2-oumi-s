@@ -19,7 +19,7 @@ class SixTwoReviewer{
         }
 
         $response = Http::withToken($this->apiKey)
-            ->timeout(30)
+            ->timeout(60)
             ->post('https://api.openai.com/v1/chat/completions', [
                 'model' => 'gpt-4o-mini', // 割と安いはず
                 'messages' => [
