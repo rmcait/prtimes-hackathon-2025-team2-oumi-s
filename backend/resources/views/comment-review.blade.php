@@ -291,15 +291,16 @@
                             name="content"
                             rows="15" 
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
-                            placeholder="# チーム開発×データ分析に挑む3Daysハッカソン受付開始
+                            placeholder="# タイトル
 
-![PR TIMES HACKATHON](https://example.com/image.jpg)
+![画像](https://example.com/image.jpg)
 
-プレスリリース配信サービス「PR TIMES」等を運営する株式会社PR TIMES（東京都港区、代表取締役：山口拓己、東証プライム：3922）は、2026・27年卒業予定のエンジニア志望学生を対象に、「PR TIMES HACKATHON 2025 Summer」を開催します。
+リード文
 
-## 同世代エンジニアとつながり、チーム開発の経験を積める3日間
+## セクション名
 
-PR TIMESハッカソンは、2016年より開催している内定直結型のハッカソンイベントです。2025年9月8日〜10日の3日間でWebサービスの開発を行い、特に優秀な方には年収500万円以上の中途採用基準での内定をお出しします。"
+セクション内容...
+"
                             required></textarea>
                         <div class="text-right text-xs text-gray-500 mt-1">
                             <span id="charCount">0 文字</span>
@@ -315,7 +316,7 @@ PR TIMESハッカソンは、2016年より開催している内定直結型の�
                                 type="text" 
                                 id="targetPersona" 
                                 name="persona"
-                                placeholder="例: 26・27卒就活生、IT業界志望"
+                                placeholder="例: 26・27卒就活生、IT業界志望(より詳細に)"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
 
